@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador de XLSX Atractivo</title>
+    <style>
+        /* Fuente externa para un toque más profesional */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@500;600&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif; /* Fuente principal moderna */
+            margin: 0;
+            padding: 0;
+            background-color: #eef2f3; /* Un gris muy claro y suave */
+            color: #333;
+            line-height: 1.7;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            background-color: #ffffff; /* Fondo blanco para el contenido */
+            padding: 40px;
+            border-radius: 12px; /* Bordes más redondeados */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Sombra más pronunciada */
+        }
+        h1 {
+            font-family: 'Poppins', sans-serif; /* Fuente más llamativa para títulos */
+            text-align: center;
+            color: #2c3e50; /* Un azul marino oscuro */
+            margin-bottom: 40px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #3498db; /* Un azul vibrante para el borde */
+            font-size: 2.5em; /* Título más grande */
+        }
+        .file-input-section {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background-color: #f8f9fa; /* Un gris claro para el área de carga */
+            border: 2px dashed #bdc3c7; /* Borde punteado más sutil */
+            border-radius: 8px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .file-input-section:hover {
+            background-color: #e9ecef; /* Cambio de color al pasar el ratón */
+            border-color: #3498db; /* Color de borde más llamativo al pasar el ratón */
+        }
+        .file-input-section label {
+            font-size: 1.3em;
+            font-weight: 600; /* Fuente semi-negrita */
+            color: #34495e; /* Azul grisáceo oscuro */
+            cursor: pointer;
+            display: block; /* Para que ocupe todo el ancho y el hover funcione mejor */
+            transition: color 0.3s ease;
+        }
+        .file-input-section label:hover {
+            color: #3498db; /* Azul principal al pasar el ratón */
+        }
+        #fileInput {
+            display: none; /* Oculta el input por defecto */
+        }
+        .message {
+            text-align: center;
+            font-style: italic;
+            color: #7f8c8d; /* Gris medio */
+            margin-bottom: 30px;
+            font-size: 1.1em;
+            padding: 15px;
+            background-color: #e0f2f7; /* Fondo azul muy claro */
+            border-radius: 5px;
+            border-left: 5px solid #3498db; /* Borde lateral para destacar */
+        }
+        .error-message {
+            color: #e74c3c; /* Rojo para errores */
+            background-color: #fdd;
+            border-left-color: #e74c3c;
+        }
+        .loading-message {
+            text-align: center;
+            font-weight: 600;
+            color: #e67e22; /* Naranja */
+            margin-bottom: 30px;
+            font-size: 1.2em;
+            padding: 20px;
+            background-color: #fff3e0;
+            border-radius: 5px;
+            border-left: 5px solid #e67e22;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate; /* Permite bordes redondeados en celdas */
+            border-spacing: 0 10px; /* Espacio vertical entre filas */
+            margin-top: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05); /* Sombra más sutil para la tabla */
+        }
+        th, td {
+            padding: 15px 20px; /* Mayor padding */
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0; /* Borde inferior más suave */
+            vertical-align: middle; /* Centra el contenido verticalmente */
+        }
+        th {
+            background-color: #3498db; /* Azul principal para encabezados */
+            color: white;
+            font-weight: 700; /* Fuente negrita */
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-size: 0.95em;
+            border-bottom: none; /* Elimina el borde inferior si hay sombreado */
+            border-radius: 5px 5px 0 0; /* Redondea esquinas superiores */
+        }
+        tr:nth-child(even) {
+            background-color: #f9fbfd; /* Un azul muy pálido para filas pares */
+        }
+        tr:hover {
+            background-color: #eaf2f8; /* Azul más claro al pasar el ratón */
+            transform: translateY(-2px); /* Pequeña elevación al pasar el ratón */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07); /* Sombra al pasar el ratón */
+            cursor: pointer;
+        }
+        td {
+            font-size: 0.95em;
+            color: #444;
+        }
+        .no-data {
+            text-align: center;
+            color: #95a5a6; /* Gris piedra */
+            font-size: 1.2em;
+            padding: 50px 20px;
+            font-weight: 500;
+        }
+
+        .pagination {
+            text-align: center;
+            margin-top: 40px;
+            display: flex; /* Usar flexbox para alinear botones */
+            justify-content: center;
+            align-items: center;
+        }
+        .pagination button {
+            background-color: #3498db; /* Azul principal */
+            color: white;
+            padding: 12px 20px;
+            margin: 0 8px;
+            border: none;
+            border-radius: 6px; /* Bordes redondeados */
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 3px 8px rgba(52, 152, 219, 0.3); /* Sombra para el botón */
+        }
+        .pagination button:hover {
+            background-color: #2980b9; /* Azul más oscuro al pasar el ratón */
+            transform: translateY(-2px); /* Elevación suave */
+        }
+        .pagination button:active {
+            transform: translateY(0); /* Quita la elevación al hacer clic */
+            box-shadow: 0 1px 3px rgba(52, 152, 219, 0.5); /* Sombra más pequeña al hacer clic */
+        }
+        .pagination button:disabled {
+            background-color: #bdc3c7; /* Gris para botones deshabilitados */
+            color: #e0e0e0;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        .pagination span {
+            font-weight: 600;
+            margin: 0 15px;
+            color: #555;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Visualizador de Archivos XLSX</h1>
+
+        <div class="file-input-section">
+            <label for="fileInput">Arrastra y suelta tu archivo XLSX aquí, o haz clic para seleccionarlo</label>
+            <input type="file" id="fileInput" accept=".xlsx">
+        </div>
+
+        <div id="messageArea" class="message">Por favor, selecciona o arrastra un archivo XLSX.</div>
+        <div id="loadingArea" class="loading-message" style="display: none;">Cargando y procesando archivo...</div>
+        <div id="tableContainer">
+            <!-- La tabla se generará aquí -->
+        </div>
+        <div id="paginationContainer" class="pagination" style="display: none;">
+            <button id="prevButton" disabled>< Anterior</button>
+            <span id="pageInfo"></span>
+            <button id="nextButton">Siguiente ></button>
+        </div>
+    </div>
+
+    <!-- 
+        *** IMPORTANTE ***
+        Si tienes problemas de conexión a la CDN, descarga este archivo (xlsx.full.min.js)
+        desde https://cdn.sheetjs.com/ y guárdalo en la misma carpeta que este HTML.
+        Luego, comenta la línea de la CDN y descomenta la línea local.
+    -->
+    <!-- CDN de SheetJS (usar si tienes conexión a Internet) -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/xlsx.full.min.js"></script>
+    <!-- Archivo local de SheetJS (descomentar si la CDN falla) -->
+    <!-- <script src="xlsx.full.min.js"></script> -->
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const messageArea = document.getElementById('messageArea');
+        const loadingArea = document.getElementById('loadingArea');
+        const tableContainer = document.getElementById('tableContainer');
+        const paginationContainer = document.getElementById('paginationContainer');
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+        const pageInfo = document.getElementById('pageInfo');
+        const fileInputSection = document.querySelector('.file-input-section');
+
+        let headers = []; // Para almacenar los encabezados de la tabla
+        let currentSheetData = []; // Datos de la hoja actual para paginación
+        let currentPage = 1;
+        const rowsPerPage = 15; // Número de filas a mostrar por página (ajustado para mejor visualización)
+
+        // --- Manejo de Drag & Drop ---
+        fileInputSection.addEventListener('dragover', (e) => {
+            e.preventDefault(); // Prevenir comportamiento por defecto
+            fileInputSection.style.backgroundColor = '#e9ecef'; // Feedback visual
+            fileInputSection.style.borderColor = '#3498db';
+        });
+
+        fileInputSection.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            fileInputSection.style.backgroundColor = '#f8f9fa'; // Restaurar color
+            fileInputSection.style.borderColor = '#bdc3c7';
+        });
+
+        fileInputSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileInputSection.style.backgroundColor = '#f8f9fa'; // Restaurar color
+            fileInputSection.style.borderColor = '#bdc3c7';
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files; // Asignar los archivos al input
+                handleFileProcessing(); // Procesar el archivo
+            }
+        });
+
+        // --- Manejo de Selección de Archivo ---
+        fileInput.addEventListener('change', handleFileProcessing);
+
+        function handleFileProcessing() {
+            const file = fileInput.files[0];
+            if (!file) {
+                return;
+            }
+
+            if (!file.name.toLowerCase().endsWith('.xlsx')) {
+                updateMessage('Por favor, selecciona un archivo con extensión .xlsx', 'error');
+                return;
+            }
+
+            // Limpiar estado anterior
+            messageArea.style.display = 'none';
+            loadingArea.style.display = 'block';
+            tableContainer.innerHTML = '';
+            paginationContainer.style.display = 'none';
+            currentPage = 1; // Resetear página al cargar nuevo archivo
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    // Verificar si XLSX está definido ANTES de usarlo
+                    if (typeof XLSX === 'undefined') {
+                        throw new Error('La librería SheetJS (XLSX) no está cargada correctamente. Asegúrate de que el archivo JS se incluyó correctamente.');
+                    }
+
+                    const binaryString = event.target.result;
+                    const workbook = XLSX.read(binaryString, { type: 'binary' });
+
+                    // Obtener la primera hoja
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+
+                    if (!worksheet) {
+                        throw new Error('No se pudo leer la hoja del archivo.');
+                    }
+
+                    // Convertir la hoja a JSON. header: 1 hace que la primera fila sea encabezados.
+                    const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+
+                    if (data.length === 0) {
+                        throw new Error('El archivo está vacío o no contiene datos.');
+                    }
+
+                    // Procesar y mostrar los datos
+                    processAndDisplayData(data);
+                    loadingArea.style.display = 'none';
+
+                } catch (error) {
+                    loadingArea.style.display = 'none';
+                    updateMessage(`Error: ${error.message}`, 'error');
+                }
+            };
+
+            reader.onerror = function(event) {
+                loadingArea.style.display = 'none';
+                updateMessage('Error al leer el archivo.', 'error');
+            };
+
+            reader.readAsBinaryString(file);
+        }
+
+        function processAndDisplayData(data) {
+            if (!data || data.length === 0) {
+                tableContainer.innerHTML = '<div class="no-data">No hay datos para mostrar.</div>';
+                paginationContainer.style.display = 'none';
+                return;
+            }
+
+            // La primera fila son los encabezados
+            headers = data[0].map(header => header ? header.toString().trim() : ''); // Limpiar encabezados
+            currentSheetData = data.slice(1); // Datos del cuerpo de la tabla
+
+            displayPage(currentPage);
+            setupPagination(currentSheetData.length);
+        }
+
+        function displayPage(page) {
+            const startIndex = (page - 1) * rowsPerPage;
+            const endIndex = startIndex + rowsPerPage;
+            const pageData = currentSheetData.slice(startIndex, endIndex);
+
+            let tableHtml = '<table>';
+
+            // Crear encabezados de tabla
+            tableHtml += '<thead><tr>';
+            headers.forEach(header => {
+                tableHtml += `<th>${header}</th>`;
+            });
+            tableHtml += '</tr></thead>';
+
+            // Crear filas de datos
+            tableHtml += '<tbody>';
+            if (pageData.length > 0) {
+                pageData.forEach((row, rowIndex) => {
+                    tableHtml += '<tr>';
+                    // Asegurarnos de que cada fila tenga tantos elementos como encabezados
+                    for (let i = 0; i < headers.length; i++) {
+                        const cellData = row[i] !== undefined ? row[i] : '';
+                        tableHtml += `<td>${cellData}</td>`;
+                    }
+                    tableHtml += '</tr>';
+                });
+            } else {
+                tableHtml += `<tr><td colspan="${headers.length}" class="no-data">No hay datos en esta página.</td></tr>`;
+            }
+            tableHtml += '</tbody>';
+
+            tableHtml += '</table>';
+            tableContainer.innerHTML = tableHtml;
+
+            // Actualizar información de paginación
+            const totalPages = Math.ceil(currentSheetData.length / rowsPerPage);
+            pageInfo.textContent = `Página ${page} de ${totalPages}`;
+            prevButton.disabled = page === 1;
+            nextButton.disabled = page === totalPages;
+        }
+
+        function setupPagination(totalItems) {
+            const totalPages = Math.ceil(totalItems / rowsPerPage);
+            if (totalItems > 0) {
+                paginationContainer.style.display = 'flex'; // Mostrar como flex
+                pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+                prevButton.disabled = currentPage === 1;
+                nextButton.disabled = currentPage === totalPages;
+            } else {
+                paginationContainer.style.display = 'none';
+            }
+        }
+
+        // Event listeners para los botones de paginación
+        prevButton.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                displayPage(currentPage);
+            }
+        });
+
+        nextButton.addEventListener('click', () => {
+            const totalPages = Math.ceil(currentSheetData.length / rowsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayPage(currentPage);
+            }
+        });
+
+        // Función para actualizar mensajes con estilo
+        function updateMessage(text, type = 'info') {
+            messageArea.textContent = text;
+            messageArea.style.display = 'block';
+            messageArea.classList.remove('error-message'); // Remover clase anterior
+            if (type === 'error') {
+                messageArea.classList.add('error-message');
+            }
+        }
+
+        // Inicializar mensaje al cargar la página
+        updateMessage('Por favor, selecciona o arrastra un archivo XLSX.');
+
+    </script>
+</body>
+</html>
