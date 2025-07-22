@@ -16,7 +16,7 @@
             --text-color: #333; /* Color de texto principal */
             --text-muted: #7f8c8d; /* Texto secundario/desactivado */
             --error-color: #e74c3c; /* Rojo para errores */
-            --loading-color: #e67e22; /* Naranja para carga */
+            --loading-color: #f8f9fa; /* Naranja para carga */
             --border-color: #dee2e6; /* Color de borde sutil */
             --hover-bg: #e9ecef; /* Color de fondo al pasar el ratón */
             --table-even-bg: #f9fbfd; /* Fondo de fila par suave */
@@ -45,12 +45,19 @@
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1); /* Sombra más pronunciada */
             text-align: center;
         }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap; /* Para que los elementos se ajusten en pantallas pequeñas */
+            margin-bottom: 20px;
+        }
         .logo-container {
-            margin-bottom: 20px; /* Espacio entre logo y título */
+            margin-bottom: 0; /* Quitamos margen inferior del logo contenedor */
         }
         .logo {
             height: 50px; /* Ajusta la altura del logo como necesites */
-            margin: 0 auto; /* Centra el logo */
+            margin: 0; /* Quitamos margen auto para que no interfiera con flex */
             display: block;
         }
         h1 {
@@ -67,6 +74,35 @@
             font-style: italic;
             margin-top: 0;
             margin-bottom: 15px; /* Espacio después de "Powered by" */
+        }
+
+        /* Estilos para el selector de idioma */
+        .language-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Espacio entre botones */
+        }
+        .language-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+            color: var(--text-muted);
+        }
+        .language-button.active {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+        }
+        .language-button:hover {
+            background-color: var(--hover-bg);
+            color: var(--primary-color);
+        }
+        .language-button.active:hover {
+            background-color: var(--primary-color); /* Mantiene el color activo al pasar el ratón */
         }
 
         .file-input-section {
@@ -142,7 +178,7 @@
         }
 
         table {
-            width: 150%; /* Permite que la tabla sea más ancha para el scroll */
+            width: 100%; /* Cambiado a 100% para que el wrapper controle el scroll */
             border-collapse: collapse; /* Bordes consistentes */
             min-width: 800px; /* Ancho mínimo para que el scroll se active */
             border-radius: 10px; /* Redondeado aplicado a la tabla */
@@ -153,8 +189,6 @@
             text-align: left;
             border-bottom: 1px solid var(--border-color); /* Borde inferior más suave */
             vertical-align: middle;
-            /* word-break: break-word; */ /* ¡Comentado para evitar la fragmentación! */
-            /* hyphens: auto; */ /* ¡Comentado! */
             font-size: 0.9em; /* Fuente ligeramente más pequeña para mejor ajuste */
         }
         th {
@@ -264,27 +298,34 @@
 </head>
 <body>
     <div class="container">
-        <!-- Logo de Artia -->
-        <div class="logo-container">
-            <img src="https://i.ibb.co/1kJRQj2/logo-artia-azul.png" alt="Logo Artia" class="logo">
+        <!-- Contenedor para Logo y Título -->
+        <div class="header-container">
+            <div class="logo-container">
+                <img src="https://i.ibb.co/1kJRQj2/logo-artia-azul.png" alt="Logo Artia" class="logo">
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <h1>Visualizador de Datos XLSX</h1>
+                <p class="powered-by">Powered by Artia: Marketing & Publicidad Integral</p>
+            </div>
+            <div class="language-selector">
+                <button id="esButton" class="language-button active">ES</button>
+                <button id="enButton" class="language-button">EN</button>
+            </div>
         </div>
-
-        <h1>Visualizador de Datos XLSX</h1>
-        <p class="powered-by">Powered by Artia: Marketing & Publicidad Integral</p>
 
         <!-- Selector de Hojas -->
         <div id="sheetSelectorContainer" class="sheet-selector-container" style="display: none;">
-            <label for="sheetSelect">Seleccionar Hoja:</label>
+            <label for="sheetSelect" id="selectSheetLabel"></label>
             <select id="sheetSelect"></select>
         </div>
 
         <div class="file-input-section" id="dropZone">
-            <label for="fileInput">Arrastra y suelta tu archivo XLSX aquí, o haz clic para seleccionarlo</label>
+            <label for="fileInput" id="dropFileLabel"></label>
             <input type="file" id="fileInput" accept=".xlsx">
         </div>
 
-        <div id="messageArea" class="message-box info">Por favor, selecciona o arrastra un archivo XLSX.</div>
-        <div id="loadingArea" class="message-box loading" style="display: none;">Archivo Cargado...</div>
+        <div id="messageArea" class="message-box info" style="display: none;"></div>
+        <div id="loadingArea" class="message-box loading" style="display: none;">Cargando archivo...</div>
         
         <!-- Wrapper para la tabla -->
         <div class="table-responsive-wrapper">
@@ -294,9 +335,9 @@
         </div>
         
         <div id="paginationContainer" class="pagination" style="display: none;">
-            <button id="prevButton" disabled>< Anterior</button>
+            <button id="prevButton" disabled></button>
             <span id="pageInfo"></span>
-            <button id="nextButton">Siguiente ></button>
+            <button id="nextButton"></button>
         </div>
     </div>
 
@@ -313,6 +354,59 @@
     <script src="xlsx.full.min.js"></script>
 
     <script>
+        // --- Datos de Traducción ---
+        const translations = {
+            es: {
+                title: "Visualizador de Datos XLSX",
+                poweredBy: "Powered by Artia: Marketing & Publicidad Integral",
+                selectSheetLabel: "Seleccionar Hoja:",
+                dropFileLabel: "Arrastra y suelta tu archivo XLSX aquí, o haz clic para seleccionarlo",
+                message: {
+                    selectFile: "Por favor, selecciona o arrastra un archivo XLSX.",
+                    processing: "Cargando y procesando archivo...",
+                    error: "Error:",
+                    fileExtension: "Por favor, selecciona un archivo con extensión .xlsx",
+                    sheetNotFound: "Hoja no encontrada.",
+                    emptyFile: "El archivo está vacío o no contiene datos.",
+                    libraryNotLoaded: "La librería SheetJS (XLSX) no está cargada. Verifica la URL de la CDN o la inclusión del archivo JS local.",
+                    readFileError: "Error al leer el archivo.",
+                    noData: "No hay datos para mostrar.",
+                    emptySheet: "La hoja seleccionada está vacía."
+                },
+                pagination: {
+                    previous: "Anterior",
+                    next: "Siguiente",
+                    pageInfo: "Página"
+                }
+            },
+            en: {
+                title: "XLSX Data Viewer",
+                poweredBy: "Powered by Artia: Marketing & Advertising",
+                selectSheetLabel: "Select Sheet:",
+                dropFileLabel: "Drag and drop your XLSX file here, or click to select it",
+                message: {
+                    selectFile: "Please select or drag an XLSX file.",
+                    processing: "Loading and processing file...",
+                    error: "Error:",
+                    fileExtension: "Please select a file with .xlsx extension",
+                    sheetNotFound: "Sheet not found.",
+                    emptyFile: "The file is empty or contains no data.",
+                    libraryNotLoaded: "SheetJS (XLSX) library is not loaded. Please check the CDN URL or the local JS file inclusion.",
+                    readFileError: "Error reading file.",
+                    noData: "No data to display.",
+                    emptySheet: "The selected sheet is empty."
+                },
+                pagination: {
+                    previous: "Previous",
+                    next: "Next",
+                    pageInfo: "Page"
+                }
+            }
+        };
+
+        let currentLanguage = 'es'; // Idioma por defecto
+
+        // --- Elementos del DOM ---
         const fileInput = document.getElementById('fileInput');
         const messageArea = document.getElementById('messageArea');
         const loadingArea = document.getElementById('loadingArea');
@@ -324,6 +418,13 @@
         const dropZone = document.getElementById('dropZone');
         const sheetSelectorContainer = document.getElementById('sheetSelectorContainer');
         const sheetSelect = document.getElementById('sheetSelect');
+        const esButton = document.getElementById('esButton');
+        const enButton = document.getElementById('enButton');
+        const logoContainer = document.querySelector('.logo-container'); // Para el logo
+        const mainTitle = document.querySelector('h1');
+        const poweredByText = document.querySelector('.powered-by');
+        const selectSheetLabel = document.getElementById('selectSheetLabel');
+        const dropFileLabel = document.getElementById('dropFileLabel');
 
         let workbook = null; // Para almacenar el workbook completo una vez leído
         let currentSheetName = ''; // Nombre de la hoja actualmente mostrada
@@ -338,8 +439,58 @@
             messageArea.classList.remove('info', 'error', 'loading'); // Limpia clases previas
             messageArea.classList.add(type); // Añade la clase correcta
             messageArea.style.display = 'flex'; // Asegura que sea visible como flex para el layout interno
-            loadingArea.style.display = 'none'; // Siempre oculta el de carga cuando mostramos otro mensaje
         }
+
+        // --- Función de Traducción ---
+        function translate(key) {
+            const keys = key.split('.');
+            let text = translations[currentLanguage];
+            for (const k of keys) {
+                if (text && text[k] !== undefined) {
+                    text = text[k];
+                } else {
+                    return key; // Devuelve la clave si no se encuentra la traducción
+                }
+            }
+            return text;
+        }
+
+        // --- Función para aplicar traducciones a la UI ---
+        function applyTranslations() {
+            mainTitle.textContent = translate('es.title');
+            poweredByText.textContent = translate('es.poweredBy');
+            selectSheetLabel.textContent = translate('es.selectSheetLabel');
+            dropFileLabel.textContent = translate('es.dropFileLabel');
+            
+            // Actualizar botones de idioma
+            esButton.classList.toggle('active', currentLanguage === 'es');
+            enButton.classList.toggle('active', currentLanguage === 'en');
+
+            // Actualizar mensajes (si ya hay alguno visible)
+            if (messageArea.style.display !== 'none') {
+                 // Si el mensaje es de error o procesamiento, intenta traducirlo
+                if (messageArea.classList.contains('error')) {
+                    // Intentar traducir el error específico si es posible, o usar un mensaje genérico
+                    // Esto requiere un mapeo más complejo de errores a claves de traducción
+                    updateMessage(translate('es.message.error') + " " + messageArea.textContent.split(':')[1].trim(), 'error');
+                } else if (messageArea.classList.contains('loading')) {
+                    updateMessage(translate('es.message.processing'), 'loading');
+                } else {
+                    updateMessage(translate('es.message.selectFile'), 'info');
+                }
+            }
+
+            // Actualizar paginación (si está visible)
+            if (paginationContainer.style.display !== 'none') {
+                const totalPages = Math.ceil(currentSheetData.length / rowsPerPage);
+                prevButton.textContent = translate('es.pagination.previous');
+                nextButton.textContent = translate('es.pagination.next');
+                pageInfo.textContent = `${translate('es.pagination.pageInfo')} ${currentPage} ${translate('es.pagination.of')} ${totalPages}`;
+                prevButton.disabled = currentPage === 1;
+                nextButton.disabled = currentPage === totalPages;
+            }
+        }
+
 
         // --- Manejo de Drag & Drop ---
         dropZone.addEventListener('dragover', (e) => {
@@ -379,7 +530,7 @@
             }
 
             if (!file.name.toLowerCase().endsWith('.xlsx')) {
-                updateMessage('Por favor, selecciona un archivo con extensión .xlsx', 'error');
+                updateMessage(translate('es.message.fileExtension'), 'error');
                 return;
             }
 
@@ -388,15 +539,14 @@
             paginationContainer.style.display = 'none';
             sheetSelectorContainer.style.display = 'none'; // Ocultar selector de hojas hasta que haya datos
             currentPage = 1; // Resetear página al cargar nuevo archivo
-            updateMessage('Cargando y procesando archivo...', 'loading');
+            updateMessage(translate('es.message.processing'), 'loading');
 
             const reader = new FileReader();
             reader.onload = function(event) {
                 try {
                     // VERIFICAR SI XLSX ESTÁ DEFINIDO ANTES DE USARLO
                     if (typeof XLSX === 'undefined') {
-                        // Este error ahora debería ser menos probable con la CDN activa y correcta
-                        throw new Error('La librería SheetJS (XLSX) no está cargada. Verifica la URL de la CDN o la inclusión del archivo JS local.');
+                        throw new Error(translate('es.message.libraryNotLoaded'));
                     }
 
                     const binaryString = event.target.result;
@@ -411,17 +561,19 @@
                     if (firstSheetName) {
                         displaySheet(firstSheetName);
                     } else {
-                        throw new Error('El archivo no contiene hojas.');
+                        throw new Error(translate('es.message.emptyFile'));
                     }
 
                 } catch (error) {
-                    updateMessage(`Error: ${error.message}`, 'error');
+                    // Extraer el mensaje de error del objeto si es posible
+                    const errorMessage = error.message || error;
+                    updateMessage(`${translate('es.message.error')} ${errorMessage}`, 'error');
                     workbook = null; // Resetear workbook en caso de error
                 }
             };
 
             reader.onerror = function(event) {
-                updateMessage('Error al leer el archivo.', 'error');
+                updateMessage(translate('es.message.readFileError'), 'error');
                 workbook = null;
             };
 
@@ -448,7 +600,7 @@
 
         function displaySheet(sheetName) {
             if (!workbook || !workbook.Sheets[sheetName]) {
-                updateMessage('Hoja no encontrada.', 'error');
+                updateMessage(translate('es.message.sheetNotFound'), 'error');
                 return;
             }
 
@@ -460,8 +612,9 @@
             const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
 
             if (data.length === 0) {
-                tableContainer.innerHTML = '<div class="no-data">La hoja seleccionada está vacía.</div>';
+                tableContainer.innerHTML = '<div class="no-data">' + translate('es.message.emptySheet') + '</div>';
                 paginationContainer.style.display = 'none';
+                loadingArea.style.display = 'none'; // Ocultar carga si no hay datos
                 return;
             }
 
@@ -506,7 +659,7 @@
                 });
             } else {
                 // Mensaje si una página está vacía
-                tableHtml += `<tr><td colspan="${headers.length}" class="no-data">No hay datos en esta página.</td></tr>`;
+                tableHtml += `<tr><td colspan="${headers.length}" class="no-data">${translate('es.message.noData')}</td></tr>`;
             }
             tableHtml += '</tbody>';
 
@@ -515,22 +668,24 @@
 
             // Actualizar información de paginación
             const totalPages = Math.ceil(currentSheetData.length / rowsPerPage);
-            pageInfo.textContent = `Página ${page} de ${totalPages}`;
-            prevButton.disabled = page === 1;
-            nextButton.disabled = page === totalPages;
+            pageInfo.textContent = `${translate('es.pagination.pageInfo')} ${currentPage} ${translate('es.pagination.of')} ${totalPages}`;
+            prevButton.disabled = currentPage === 1;
+            nextButton.disabled = currentPage === totalPages;
         }
 
         function setupPagination(totalItems) {
             const totalPages = Math.ceil(totalItems / rowsPerPage);
             if (totalItems > 0) {
                 paginationContainer.style.display = 'flex'; // Mostrar como flex
-                pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+                pageInfo.textContent = `${translate('es.pagination.pageInfo')} ${currentPage} ${translate('es.pagination.of')} ${totalPages}`;
                 prevButton.disabled = currentPage === 1;
                 nextButton.disabled = currentPage === totalPages;
             } else {
                 paginationContainer.style.display = 'none'; // Ocultar si no hay datos
             }
         }
+
+        // --- Event Listeners ---
 
         // Event listeners para los botones de paginación
         prevButton.addEventListener('click', () => {
@@ -554,8 +709,28 @@
             displaySheet(event.target.value);
         });
 
-        // Inicializar mensaje al cargar la página
-        updateMessage('Por favor, selecciona o arrastra un archivo XLSX.', 'info');
+        // Event listeners para cambio de idioma
+        esButton.addEventListener('click', () => {
+            currentLanguage = 'es';
+            applyTranslations();
+            // Re-renderizar la tabla con el idioma correcto si ya hay datos
+            if (currentSheetData.length > 0) {
+                displayPage(currentPage); // Re-renderiza la página actual con traducciones
+            }
+        });
+
+        enButton.addEventListener('click', () => {
+            currentLanguage = 'en';
+            applyTranslations();
+            // Re-renderizar la tabla con el idioma correcto si ya hay datos
+            if (currentSheetData.length > 0) {
+                displayPage(currentPage); // Re-renderiza la página actual con traducciones
+            }
+        });
+
+        // --- Inicialización ---
+        // Aplicar traducciones iniciales al cargar la página
+        applyTranslations();
 
     </script>
 </body>
