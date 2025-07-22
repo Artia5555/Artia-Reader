@@ -283,6 +283,7 @@
     <!-- 
         *** CONFIGURACIÓN PARA DESPLIEGUE WEB (Vercel/GitHub) ***
         1. ASEGÚRATE de que la siguiente línea de la CDN (la que tiene la URL actualizada) esté DESCOMENTADA.
+           Esta es la línea que Vercel necesita para cargar SheetJS.
         2. ASEGÚRATE de que la línea que apunta a `xlsx.full.min.js` local esté COMENTADA con `<!-- -->`.
         3. Sube este archivo HTML a tu repositorio de GitHub. Vercel usará la CDN de SheetJS.
     -->
@@ -372,7 +373,9 @@
             const reader = new FileReader();
             reader.onload = function(event) {
                 try {
+                    // VERIFICAR SI XLSX ESTÁ DEFINIDO ANTES DE USARLO
                     if (typeof XLSX === 'undefined') {
+                        // Este error ahora debería ser menos probable con la CDN activa y correcta
                         throw new Error('La librería SheetJS (XLSX) no está cargada. Verifica la URL de la CDN o la inclusión del archivo JS local.');
                     }
 
@@ -420,7 +423,7 @@
             });
 
             sheetSelectorContainer.style.display = 'flex'; // Mostrar el selector de hojas
-            loadingArea.style.display = 'none'; // Ocultar carga una vez que el selector está listo
+            // loadingArea ya se oculta en displaySheet si todo va bien
         }
 
         function displaySheet(sheetName) {
@@ -439,6 +442,7 @@
             if (data.length === 0) {
                 tableContainer.innerHTML = '<div class="no-data">La hoja seleccionada está vacía.</div>';
                 paginationContainer.style.display = 'none';
+                loadingArea.style.display = 'none'; // Ocultar carga si no hay datos
                 return;
             }
 
@@ -452,7 +456,7 @@
 
             displayPage(currentPage); // Mostrar la página actual
             setupPagination(currentSheetData.length); // Configurar paginación
-            loadingArea.style.display = 'none'; // Ocultar carga
+            loadingArea.style.display = 'none'; // Ocultar carga una vez que la tabla está lista
         }
 
         function displayPage(page) {
