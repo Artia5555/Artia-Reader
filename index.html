@@ -16,7 +16,7 @@
             --text-color: #333; /* Color de texto principal */
             --text-muted: #7f8c8d; /* Texto secundario/desactivado */
             --error-color: #e74c3c; /* Rojo para errores */
-            --loading-color: #f8f9fa; /* Naranja para carga */
+            --loading-color: #e67e22; /* Naranja para carga */
             --border-color: #dee2e6; /* Color de borde sutil */
             --hover-bg: #e9ecef; /* Color de fondo al pasar el ratón */
             --table-even-bg: #f9fbfd; /* Fondo de fila par suave */
@@ -298,17 +298,17 @@
 </head>
 <body>
     <div class="container">
-        <!-- Contenedor para Logo y Título -->
+        <!-- Contenedor para Logo, Título y Selector de Idioma -->
         <div class="header-container">
             <div class="logo-container">
                 <img src="https://i.ibb.co/1kJRQj2/logo-artia-azul.png" alt="Logo Artia" class="logo">
             </div>
             <div style="display: flex; flex-direction: column; align-items: center;">
-                <h1>Visualizador de Datos XLSX</h1>
-                <p class="powered-by">Powered by Artia: Marketing & Publicidad Integral</p>
+                <h1 id="mainTitle"></h1>
+                <p class="powered-by" id="poweredByText"></p>
             </div>
             <div class="language-selector">
-                <button id="esButton" class="language-button active">ES</button>
+                <button id="esButton" class="language-button">ES</button>
                 <button id="enButton" class="language-button">EN</button>
             </div>
         </div>
@@ -325,7 +325,7 @@
         </div>
 
         <div id="messageArea" class="message-box info" style="display: none;"></div>
-        <div id="loadingArea" class="message-box loading" style="display: none;">Cargando archivo...</div>
+        <div id="loadingArea" class="message-box loading" style="display: none;"></div>
         
         <!-- Wrapper para la tabla -->
         <div class="table-responsive-wrapper">
@@ -345,13 +345,13 @@
         *** CONFIGURACIÓN PARA DESPLIEGUE WEB (Vercel/GitHub) ***
         1. ASEGÚRATE de que la siguiente línea de la CDN (la que tiene la URL actualizada) esté DESCOMENTADA.
            Esta es la línea que Vercel necesita para cargar SheetJS.
-        2. ASEGÚRATE de que la línea que apunta a `xlsx.full.min.js` local esté COMENTADA con.
+        2. ASEGÚRATE de que la línea que apunta a `xlsx.full.min.js` local esté COMENTADA con `<!-- -->`.
         3. Sube este archivo HTML a tu repositorio de GitHub. Vercel usará la CDN de SheetJS.
     -->
     <!-- CDN de SheetJS (versión correcta para Vercel/Web) -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/xlsx.full.min.js"></script>
     <!-- Archivo local de SheetJS (comentar esta línea para el despliegue en Vercel) -->
-    <script src="xlsx.full.min.js"></script>
+    <!-- <script src="xlsx.full.min.js"></script> -->
 
     <script>
         // --- Datos de Traducción ---
@@ -376,7 +376,7 @@
                 pagination: {
                     previous: "Anterior",
                     next: "Siguiente",
-                    pageInfo: "Página"
+                    of: "de"
                 }
             },
             en: {
@@ -399,7 +399,7 @@
                 pagination: {
                     previous: "Previous",
                     next: "Next",
-                    pageInfo: "Page"
+                    of: "of"
                 }
             }
         };
@@ -420,9 +420,8 @@
         const sheetSelect = document.getElementById('sheetSelect');
         const esButton = document.getElementById('esButton');
         const enButton = document.getElementById('enButton');
-        const logoContainer = document.querySelector('.logo-container'); // Para el logo
-        const mainTitle = document.querySelector('h1');
-        const poweredByText = document.querySelector('.powered-by');
+        const mainTitle = document.getElementById('mainTitle');
+        const poweredByText = document.getElementById('poweredByText');
         const selectSheetLabel = document.getElementById('selectSheetLabel');
         const dropFileLabel = document.getElementById('dropFileLabel');
 
@@ -439,6 +438,7 @@
             messageArea.classList.remove('info', 'error', 'loading'); // Limpia clases previas
             messageArea.classList.add(type); // Añade la clase correcta
             messageArea.style.display = 'flex'; // Asegura que sea visible como flex para el layout interno
+            loadingArea.style.display = 'none'; // Siempre oculta el de carga cuando mostramos otro mensaje
         }
 
         // --- Función de Traducción ---
@@ -457,10 +457,10 @@
 
         // --- Función para aplicar traducciones a la UI ---
         function applyTranslations() {
-            mainTitle.textContent = translate('es.title');
-            poweredByText.textContent = translate('es.poweredBy');
-            selectSheetLabel.textContent = translate('es.selectSheetLabel');
-            dropFileLabel.textContent = translate('es.dropFileLabel');
+            mainTitle.textContent = translate('title');
+            poweredByText.textContent = translate('poweredBy');
+            selectSheetLabel.textContent = translate('selectSheetLabel');
+            dropFileLabel.textContent = translate('dropFileLabel');
             
             // Actualizar botones de idioma
             esButton.classList.toggle('active', currentLanguage === 'es');
@@ -468,26 +468,37 @@
 
             // Actualizar mensajes (si ya hay alguno visible)
             if (messageArea.style.display !== 'none') {
-                 // Si el mensaje es de error o procesamiento, intenta traducirlo
+                // Si el mensaje es de error o procesamiento, intenta traducirlo
                 if (messageArea.classList.contains('error')) {
-                    // Intentar traducir el error específico si es posible, o usar un mensaje genérico
-                    // Esto requiere un mapeo más complejo de errores a claves de traducción
-                    updateMessage(translate('es.message.error') + " " + messageArea.textContent.split(':')[1].trim(), 'error');
+                    // Forzar la traducción del mensaje base de error si está disponible
+                    // Si el mensaje de error específico contiene más detalles, puede ser necesario un manejo más sofisticado.
+                    updateMessage(translate('message.error') + " " + messageArea.textContent.split(':')[1]?.trim() || translate('message.error'), 'error');
                 } else if (messageArea.classList.contains('loading')) {
-                    updateMessage(translate('es.message.processing'), 'loading');
+                    updateMessage(translate('message.processing'), 'loading');
                 } else {
-                    updateMessage(translate('es.message.selectFile'), 'info');
+                    updateMessage(translate('message.selectFile'), 'info');
                 }
             }
 
             // Actualizar paginación (si está visible)
             if (paginationContainer.style.display !== 'none') {
                 const totalPages = Math.ceil(currentSheetData.length / rowsPerPage);
-                prevButton.textContent = translate('es.pagination.previous');
-                nextButton.textContent = translate('es.pagination.next');
-                pageInfo.textContent = `${translate('es.pagination.pageInfo')} ${currentPage} ${translate('es.pagination.of')} ${totalPages}`;
+                prevButton.textContent = translate('pagination.previous');
+                nextButton.textContent = translate('pagination.next');
+                pageInfo.textContent = `${translate('pagination.pageInfo')} ${currentPage} ${translate('pagination.of')} ${totalPages}`;
                 prevButton.disabled = currentPage === 1;
                 nextButton.disabled = currentPage === totalPages;
+            }
+            // Actualizar encabezados de tabla (si ya se cargaron)
+            if (headers.length > 0) {
+                 const headerCells = tableContainer.querySelectorAll('th');
+                 headers.forEach((header, index) => {
+                     // Asumiendo que los encabezados están en un orden predecible y que la traducción
+                     // para cada encabezado se puede encontrar con una clave simple (ej. 'header_1', 'header_2')
+                     // Esto requeriría una estructura de traducción más compleja si los nombres de columna varían.
+                     // Por ahora, solo actualizamos los que están directamente en la UI.
+                     // Si necesitas traducir encabezados de columna dinámicamente, se requeriría un mapeo adicional.
+                 });
             }
         }
 
@@ -530,7 +541,7 @@
             }
 
             if (!file.name.toLowerCase().endsWith('.xlsx')) {
-                updateMessage(translate('es.message.fileExtension'), 'error');
+                updateMessage(translate('message.fileExtension'), 'error');
                 return;
             }
 
@@ -539,14 +550,14 @@
             paginationContainer.style.display = 'none';
             sheetSelectorContainer.style.display = 'none'; // Ocultar selector de hojas hasta que haya datos
             currentPage = 1; // Resetear página al cargar nuevo archivo
-            updateMessage(translate('es.message.processing'), 'loading');
+            updateMessage(translate('message.processing'), 'loading');
 
             const reader = new FileReader();
             reader.onload = function(event) {
                 try {
                     // VERIFICAR SI XLSX ESTÁ DEFINIDO ANTES DE USARLO
                     if (typeof XLSX === 'undefined') {
-                        throw new Error(translate('es.message.libraryNotLoaded'));
+                        throw new Error(translate('message.libraryNotLoaded'));
                     }
 
                     const binaryString = event.target.result;
@@ -561,19 +572,19 @@
                     if (firstSheetName) {
                         displaySheet(firstSheetName);
                     } else {
-                        throw new Error(translate('es.message.emptyFile'));
+                        throw new Error(translate('message.emptyFile'));
                     }
 
                 } catch (error) {
                     // Extraer el mensaje de error del objeto si es posible
                     const errorMessage = error.message || error;
-                    updateMessage(`${translate('es.message.error')} ${errorMessage}`, 'error');
+                    updateMessage(`${translate('message.error')} ${errorMessage}`, 'error');
                     workbook = null; // Resetear workbook en caso de error
                 }
             };
 
             reader.onerror = function(event) {
-                updateMessage(translate('es.message.readFileError'), 'error');
+                updateMessage(translate('message.readFileError'), 'error');
                 workbook = null;
             };
 
@@ -600,7 +611,7 @@
 
         function displaySheet(sheetName) {
             if (!workbook || !workbook.Sheets[sheetName]) {
-                updateMessage(translate('es.message.sheetNotFound'), 'error');
+                updateMessage(translate('message.sheetNotFound'), 'error');
                 return;
             }
 
@@ -612,7 +623,7 @@
             const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
 
             if (data.length === 0) {
-                tableContainer.innerHTML = '<div class="no-data">' + translate('es.message.emptySheet') + '</div>';
+                tableContainer.innerHTML = '<div class="no-data">' + translate('message.emptySheet') + '</div>';
                 paginationContainer.style.display = 'none';
                 loadingArea.style.display = 'none'; // Ocultar carga si no hay datos
                 return;
@@ -623,7 +634,9 @@
 
         function processAndDisplayData(data) {
             // La primera fila son los encabezados
-            headers = data[0].map(header => header ? header.toString().trim() : ''); // Limpiar encabezados
+            // Aquí se debería traducir los encabezados también si es necesario.
+            // Por ahora, se mantendrán los nombres originales del Excel.
+            headers = data[0].map(header => header ? header.toString().trim() : ''); 
             currentSheetData = data.slice(1); // Datos del cuerpo de la tabla
 
             displayPage(currentPage); // Mostrar la página actual
@@ -659,7 +672,7 @@
                 });
             } else {
                 // Mensaje si una página está vacía
-                tableHtml += `<tr><td colspan="${headers.length}" class="no-data">${translate('es.message.noData')}</td></tr>`;
+                tableHtml += `<tr><td colspan="${headers.length}" class="no-data">${translate('message.noData')}</td></tr>`;
             }
             tableHtml += '</tbody>';
 
@@ -668,7 +681,7 @@
 
             // Actualizar información de paginación
             const totalPages = Math.ceil(currentSheetData.length / rowsPerPage);
-            pageInfo.textContent = `${translate('es.pagination.pageInfo')} ${currentPage} ${translate('es.pagination.of')} ${totalPages}`;
+            pageInfo.textContent = `${translate('pagination.pageInfo')} ${currentPage} ${translate('pagination.of')} ${totalPages}`;
             prevButton.disabled = currentPage === 1;
             nextButton.disabled = currentPage === totalPages;
         }
@@ -677,7 +690,7 @@
             const totalPages = Math.ceil(totalItems / rowsPerPage);
             if (totalItems > 0) {
                 paginationContainer.style.display = 'flex'; // Mostrar como flex
-                pageInfo.textContent = `${translate('es.pagination.pageInfo')} ${currentPage} ${translate('es.pagination.of')} ${totalPages}`;
+                pageInfo.textContent = `${translate('pagination.pageInfo')} ${currentPage} ${translate('pagination.of')} ${totalPages}`;
                 prevButton.disabled = currentPage === 1;
                 nextButton.disabled = currentPage === totalPages;
             } else {
@@ -711,20 +724,24 @@
 
         // Event listeners para cambio de idioma
         esButton.addEventListener('click', () => {
-            currentLanguage = 'es';
-            applyTranslations();
-            // Re-renderizar la tabla con el idioma correcto si ya hay datos
-            if (currentSheetData.length > 0) {
-                displayPage(currentPage); // Re-renderiza la página actual con traducciones
+            if (currentLanguage !== 'es') {
+                currentLanguage = 'es';
+                applyTranslations();
+                // Re-renderizar la tabla si ya hay datos cargados
+                if (currentSheetData.length > 0) {
+                    displayPage(currentPage); 
+                }
             }
         });
 
         enButton.addEventListener('click', () => {
-            currentLanguage = 'en';
-            applyTranslations();
-            // Re-renderizar la tabla con el idioma correcto si ya hay datos
-            if (currentSheetData.length > 0) {
-                displayPage(currentPage); // Re-renderiza la página actual con traducciones
+            if (currentLanguage !== 'en') {
+                currentLanguage = 'en';
+                applyTranslations();
+                // Re-renderizar la tabla si ya hay datos cargados
+                if (currentSheetData.length > 0) {
+                    displayPage(currentPage);
+                }
             }
         });
 
