@@ -225,16 +225,16 @@
     </div>
 
     <!-- 
-        *** CONFIGURACIÓN PARA USO LOCAL DE SheetJS ***
-        1. ASEGÚRATE de haber descargado `xlsx.full.min.js` desde https://cdn.sheetjs.com/
-        2. Guarda ese archivo `xlsx.full.min.js` en la MISMA CARPETA que este archivo HTML.
-        3. VERIFICA que la línea `src="xlsx.full.min.js"` de abajo esté DESCOMENTADA.
-        4. VERIFICA que la línea de la CDN (la que tiene `cdn.sheetjs.com`) esté COMENTADA con `<!-- -->`.
-    -->
-    <!-- CDN de SheetJS (comentar si usas el archivo local) -->
-    <!-- <script src="https://cdn.sheetjs.com/xlsx-0.20.3/xlsx.full.min.js"></script> -->
-    <!-- Archivo local de SheetJS (asegúrate de que el archivo existe en la misma carpeta) -->
-    <script src="xlsx.full.min.js"></script>
+        *** CONFIGURACIÓN PARA DESPLIEGUE WEB (Vercel/GitHub) ***
+        1. ASEGÚRATE de que la siguiente línea de la CDN (la que tiene la URL actualizada) esté DESCOMENTADA.
+        2. ASEGÚRATE de que la línea que apunta a `xlsx.full.min.js` local esté COMENTADA con `<!-- -->`.
+        3. Sube este archivo HTML y la carpeta donde tienes tu `xlsx.full.min.js` (si la usaras) a tu repositorio de GitHub.
+           Pero para Vercel, solo necesitamos la línea de la CDN activa.
+           
+    <!-- CDN de SheetJS (versión correcta para Vercel/Web) -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/xlsx.full.min.js"></script>
+    <!-- Archivo local de SheetJS (comentar esta línea para el despliegue en Vercel) -->
+    <!-- <script src="xlsx.full.min.js"></script> -->
 
     <script>
         const fileInput = document.getElementById('fileInput');
@@ -314,7 +314,7 @@
                 try {
                     // VERIFICAR SI XLSX ESTÁ DEFINIDO ANTES DE USARLO
                     if (typeof XLSX === 'undefined') {
-                        // Si este error aparece, es que la URL de la CDN (o el archivo local) falló
+                        // Este error ahora debería ser menos probable con la CDN
                         throw new Error('La librería SheetJS (XLSX) no está cargada. Verifica la URL de la CDN o la inclusión del archivo JS local.');
                     }
 
