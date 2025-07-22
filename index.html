@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -178,7 +179,7 @@
         }
 
         table {
-            width: 100%; /* Cambiado a 100% para que el wrapper controle el scroll */
+            width: 150%; /* Cambiado a 100% para que el wrapper controle el scroll */
             border-collapse: collapse; /* Bordes consistentes */
             min-width: 800px; /* Ancho mínimo para que el scroll se active */
             border-radius: 10px; /* Redondeado aplicado a la tabla */
@@ -250,41 +251,6 @@
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
-        }
-
-        /* Estilos para los contenedores de gráficos */
-        .charts-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 30px; /* Espacio entre gráficos */
-            margin-top: 40px;
-        }
-        .chart-wrapper {
-            background-color: #ffffff;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.07);
-            width: 45%; /* Para dos columnas */
-            min-width: 300px; /* Ancho mínimo */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            box-sizing: border-box; /* Incluye padding y borde en el ancho total */
-        }
-        .chart-title {
-            font-size: 1.1em; /* Tamaño de fuente más pequeño para títulos de gráfico */
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 15px;
-            border-bottom: 2px solid var(--primary-color);
-            padding-bottom: 5px;
-            width: 100%; /* Asegura que el título ocupe el ancho disponible */
-        }
-        .chart-canvas {
-            max-width: 100%; /* Asegura que el canvas no exceda su contenedor */
-            height: 280px; /* Altura fija para los gráficos más pequeños */
-            width: 100% !important; /* Asegura que el canvas tome el ancho del wrapper */
         }
 
         .pagination {
@@ -368,11 +334,6 @@
                 <!-- La tabla se generará aquí -->
             </div>
         </div>
-
-        <!-- Contenedor para Gráficos -->
-        <div id="chartsContainer" class="charts-container" style="display: none;">
-            <!-- Los gráficos se generarán aquí -->
-        </div>
         
         <div id="paginationContainer" class="pagination" style="display: none;">
             <button id="prevButton" disabled></button>
@@ -385,16 +346,13 @@
         *** CONFIGURACIÓN PARA DESPLIEGUE WEB (Vercel/GitHub) ***
         1. ASEGÚRATE de que la siguiente línea de la CDN (la que tiene la URL actualizada) esté DESCOMENTADA.
            Esta es la línea que Vercel necesita para cargar SheetJS.
-        2. ASEGÚRATE de que la línea que apunta a `xlsx.full.min.js` local esté COMENTADA con `<!--.
+        2. ASEGÚRATE de que la línea que apunta a `xlsx.full.min.js` local esté COMENTADA con.
         3. Sube este archivo HTML a tu repositorio de GitHub. Vercel usará la CDN de SheetJS.
     -->
     <!-- CDN de SheetJS (versión correcta para Vercel/Web) -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/xlsx.full.min.js"></script>
     <!-- Archivo local de SheetJS (comentar esta línea para el despliegue en Vercel) -->
     <script src="xlsx.full.min.js"></script>
-
-    <!-- CDN de Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
     <script>
         // --- Datos de Traducción ---
@@ -414,15 +372,7 @@
                     libraryNotLoaded: "La librería SheetJS (XLSX) no está cargada. Verifica la URL de la CDN o la inclusión del archivo JS local.",
                     readFileError: "Error al leer el archivo.",
                     noData: "No hay datos para mostrar.",
-                    emptySheet: "La hoja seleccionada está vacía.",
-                    noChartData: "No hay datos suficientes para generar gráficos."
-                },
-                chartTitles: {
-                    platform: "Distribución por Plataforma",
-                    roofType: "Tipos de Techos Preferidos",
-                    experience: "¿Tienes Experiencia en Construcción o Techos?",
-                    state: "Distribución por Estado",
-                    leadStatus: "Estado de los Leads"
+                    emptySheet: "La hoja seleccionada está vacía."
                 },
                 pagination: {
                     previous: "Anterior",
@@ -445,8 +395,7 @@
                     libraryNotLoaded: "SheetJS (XLSX) library is not loaded. Please check the CDN URL or the local JS file inclusion.",
                     readFileError: "Error reading file.",
                     noData: "No data to display.",
-                    emptySheet: "The selected sheet is empty.",
-                    noChartData: "Not enough data to generate charts."
+                    emptySheet: "The selected sheet is empty."
                 },
                 pagination: {
                     previous: "Previous",
@@ -476,7 +425,6 @@
         const poweredByText = document.getElementById('poweredByText');
         const selectSheetLabel = document.getElementById('selectSheetLabel');
         const dropFileLabel = document.getElementById('dropFileLabel');
-        const chartsContainer = document.getElementById('chartsContainer'); // Nuevo contenedor para gráficos
 
         let workbook = null; // Para almacenar el workbook completo una vez leído
         let currentSheetName = ''; // Nombre de la hoja actualmente mostrada
@@ -484,72 +432,6 @@
         let currentSheetData = []; // Datos de la hoja actual para paginación
         let currentPage = 1;
         const rowsPerPage = 15; // Número de filas a mostrar por página
-
-        // --- Funciones de Utilidad para Gráficos ---
-
-        // Función para contar ocurrencias de valores en una columna específica
-        function countOccurrences(data, columnName) {
-            const counts = {};
-            const headerIndex = headers.indexOf(columnName);
-            if (headerIndex === -1) {
-                console.warn(`Column "${columnName}" not found in headers.`);
-                return {}; // Columna no encontrada
-            }
-
-            data.forEach(row => {
-                const value = row[headerIndex];
-                if (value !== undefined && value !== "") { // Ignorar celdas vacías
-                    counts[value] = (counts[value] || 0) + 1;
-                }
-            });
-            return counts;
-        }
-
-        // Función para crear un gráfico de pastel
-        function createPieChart(id, titleKey, dataCounts) {
-            const chartData = {
-                labels: Object.keys(dataCounts),
-                datasets: [{
-                    data: Object.values(dataCounts),
-                    backgroundColor: [
-                        '#4CAF50', '#2196F3', '#FFC107', '#F44336', '#9C27B0', '#FF9800', '#00BCD4', '#E91E63', '#607D8B'
-                    ], // Colores variados
-                    borderColor: '#fff',
-                    borderWidth: 1
-                }]
-            };
-
-            const ctx = document.getElementById(id)?.getContext('2d'); // Usar ?. para evitar error si el canvas no existe
-            if (!ctx) {
-                console.error(`Canvas element with id "${id}" not found.`);
-                return;
-            }
-
-            // Destruir gráfico anterior si existe para evitar reutilización de contexto
-            if (window.myCharts && window.myCharts[id]) {
-                window.myCharts[id].destroy();
-            }
-            window.myCharts = window.myCharts || {}; // Inicializa el objeto si no existe
-            window.myCharts[id] = new Chart(ctx, {
-                type: 'pie',
-                data: chartData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: translate(`chartTitles.${titleKey}`),
-                            font: { size: 16, weight: 'bold' },
-                            color: '#2c3e50'
-                        },
-                        legend: {
-                            position: 'bottom',
-                        }
-                    }
-                }
-            });
-        }
 
         // --- Función para actualizar mensajes ---
         function updateMessage(text, type = 'info') {
@@ -587,10 +469,11 @@
 
             // Actualizar mensajes (si ya hay alguno visible)
             if (messageArea.style.display !== 'none') {
+                // Si el mensaje es de error o procesamiento, intenta traducirlo
                 if (messageArea.classList.contains('error')) {
-                    const parts = messageArea.textContent.split(':');
-                    const originalError = parts.length > 1 ? parts[1].trim() : '';
-                    updateMessage(`${translate('message.error')} ${originalError || ''}`, 'error');
+                    // Forzar la traducción del mensaje base de error si está disponible
+                    // Si el mensaje de error específico contiene más detalles, puede ser necesario un manejo más sofisticado.
+                    updateMessage(translate('message.error') + " " + messageArea.textContent.split(':')[1]?.trim() || translate('message.error'), 'error');
                 } else if (messageArea.classList.contains('loading')) {
                     updateMessage(translate('message.processing'), 'loading');
                 } else {
@@ -607,25 +490,17 @@
                 prevButton.disabled = currentPage === 1;
                 nextButton.disabled = currentPage === totalPages;
             }
-            
-            // Actualizar títulos de gráficos si el idioma cambia y los gráficos existen
-            if (currentSheetData.length > 0) {
-                 updateChartTitles(['platform', 'roofType', 'experience', 'state', 'leadStatus']);
+            // Actualizar encabezados de tabla (si ya se cargaron)
+            if (headers.length > 0) {
+                 const headerCells = tableContainer.querySelectorAll('th');
+                 headers.forEach((header, index) => {
+                     // Asumiendo que los encabezados están en un orden predecible y que la traducción
+                     // para cada encabezado se puede encontrar con una clave simple (ej. 'header_1', 'header_2')
+                     // Esto requeriría una estructura de traducción más compleja si los nombres de columna varían.
+                     // Por ahora, solo actualizamos los que están directamente en la UI.
+                     // Si necesitas traducir encabezados de columna dinámicamente, se requeriría un mapeo adicional.
+                 });
             }
-        }
-
-        // Función auxiliar para actualizar títulos de gráficos después de un cambio de idioma
-        function updateChartTitles(chartKeys) {
-            chartKeys.forEach(key => {
-                // Busca el elemento de título dentro del contenedor del gráfico, asumiendo una estructura específica
-                const chartWrapper = document.querySelector(`canvas[id^="${key}Chart"]?.parentElement`); // Busca el padre del canvas
-                if (chartWrapper) {
-                    const chartTitleElement = chartWrapper.querySelector('.chart-title');
-                    if (chartTitleElement) {
-                        chartTitleElement.textContent = translate(`chartTitles.${key}`);
-                    }
-                }
-            });
         }
 
 
@@ -675,7 +550,6 @@
             tableContainer.innerHTML = '';
             paginationContainer.style.display = 'none';
             sheetSelectorContainer.style.display = 'none'; // Ocultar selector de hojas hasta que haya datos
-            chartsContainer.style.display = 'none'; // Ocultar gráficos hasta que haya datos
             currentPage = 1; // Resetear página al cargar nuevo archivo
             updateMessage(translate('message.processing'), 'loading');
 
@@ -703,6 +577,7 @@
                     }
 
                 } catch (error) {
+                    // Extraer el mensaje de error del objeto si es posible
                     const errorMessage = error.message || error;
                     updateMessage(`${translate('message.error')} ${errorMessage}`, 'error');
                     workbook = null; // Resetear workbook en caso de error
@@ -732,6 +607,7 @@
             });
 
             sheetSelectorContainer.style.display = 'flex'; // Mostrar el selector de hojas
+            // loadingArea ya se oculta en displaySheet si todo va bien
         }
 
         function displaySheet(sheetName) {
@@ -743,13 +619,14 @@
             currentSheetName = sheetName;
             const worksheet = workbook.Sheets[sheetName];
 
+            // Convertir la hoja a JSON. `header: 1` pone la primera fila como encabezados.
+            // `defval: ""` asegura que las celdas vacías no sean `undefined`.
             const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
 
             if (data.length === 0) {
                 tableContainer.innerHTML = '<div class="no-data">' + translate('message.emptySheet') + '</div>';
                 paginationContainer.style.display = 'none';
-                chartsContainer.style.display = 'none'; // Ocultar gráficos si la hoja está vacía
-                loadingArea.style.display = 'none';
+                loadingArea.style.display = 'none'; // Ocultar carga si no hay datos
                 return;
             }
 
@@ -758,18 +635,13 @@
 
         function processAndDisplayData(data) {
             // La primera fila son los encabezados
-            // Nota: La traducción de los encabezados de columna no está implementada aquí.
-            // Si necesitas traducir los nombres de las columnas dinámicamente, requeriría un mapeo adicional.
+            // Aquí se debería traducir los encabezados también si es necesario.
+            // Por ahora, se mantendrán los nombres originales del Excel.
             headers = data[0].map(header => header ? header.toString().trim() : ''); 
             currentSheetData = data.slice(1); // Datos del cuerpo de la tabla
 
             displayPage(currentPage); // Mostrar la página actual
             setupPagination(currentSheetData.length); // Configurar paginación
-            
-            // Generar y mostrar gráficos DESPUÉS de procesar los datos
-            renderCharts(currentSheetData);
-
-            loadingArea.style.display = 'none'; // Ocultar carga una vez que la tabla está lista
         }
 
         function displayPage(page) {
@@ -826,75 +698,6 @@
             }
         }
 
-        // --- Función para Renderizar Gráficos ---
-        function renderCharts(data) {
-            chartsContainer.innerHTML = ''; // Limpiar gráficos anteriores
-            chartsContainer.style.display = 'flex'; // Mostrar el contenedor de gráficos
-
-            // --- Configuración de Columnas a Graficar ---
-            // Define qué columnas quieres graficar y de qué tipo ('pie' o 'bar').
-            // Se priorizan columnas con al menos 3 categorías para que los gráficos sean informativos.
-            const columnsToChart = {
-                'Platform': 'pie',
-                'If yes, which one are you more comfortable with?': 'pie',
-                'Do you have experience in construction or roofing?': 'bar',
-                'State': 'bar',
-                'Lead status': 'pie'
-            };
-
-            let chartsCreated = 0; // Contador para saber si se generó algún gráfico
-
-            for (const columnName in columnsToChart) {
-                const chartType = columnsToChart[columnName];
-                const dataCounts = countOccurrences(data, columnName);
-
-                // Solo graficar si hay al menos 2 categorías diferentes Y el número total de datos > 2
-                if (Object.keys(dataCounts).length >= 2 && Object.values(dataCounts).reduce((sum, count) => sum + count, 0) > 2) {
-                    const chartDiv = document.createElement('div');
-                    chartDiv.classList.add('chart-wrapper');
-                    // Generamos un ID único basado en el nombre de la columna (limpiando caracteres no válidos)
-                    const chartId = `${columnName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')}Chart`; 
-                    
-                    chartDiv.innerHTML = `
-                        <div class="chart-title"></div> <!-- Título se pondrá con translate -->
-                        <canvas id="${chartId}" class="chart-canvas"></canvas>
-                    `;
-                    chartsContainer.appendChild(chartDiv);
-
-                    try {
-                        if (chartType === 'pie') {
-                            createPieChart(chartId, columnName.toLowerCase().replace(/[^a-z0-9]/g, ''), dataCounts);
-                        } else if (chartType === 'bar') {
-                            createBarChart(chartId, columnName.toLowerCase().replace(/[^a-z0-9]/g, ''), dataCounts);
-                        }
-                        chartsCreated++;
-                    } catch (e) {
-                        console.error(`Error rendering chart for column "${columnName}":`, e);
-                        // Si hay un error al crear el gráfico, puedes mostrar un mensaje de error en su lugar
-                        const chartTitleElement = chartDiv.querySelector('.chart-title');
-                        if (chartTitleElement) {
-                            chartTitleElement.textContent = `${translate('message.error')} ${translate(`chartTitles.${columnName.toLowerCase().replace(/[^a-z0-9]/g, '')}`) || columnName}`;
-                        }
-                        const canvasElement = chartDiv.querySelector('.chart-canvas');
-                        if (canvasElement) {
-                            canvasElement.remove(); // Eliminar el canvas si falla
-                        }
-                    }
-                }
-            }
-
-            // Si no se renderizó ningún gráfico, muestra un mensaje
-            if (chartsCreated === 0) {
-                chartsContainer.style.display = 'block'; // Mostrar contenedor para el mensaje
-                chartsContainer.innerHTML = '<div class="no-data">' + translate('message.noChartData') + '</div>';
-            } else {
-                // Si se crearon gráficos, asegurar que el contenedor de gráficos sea visible
-                chartsContainer.style.display = 'flex';
-            }
-            loadingArea.style.display = 'none'; // Ocultar carga una vez que todo está renderizado
-        }
-
-
         // --- Event Listeners ---
 
         // Event listeners para los botones de paginación
@@ -924,9 +727,9 @@
             if (currentLanguage !== 'es') {
                 currentLanguage = 'es';
                 applyTranslations();
-                // Re-renderizar la tabla y los gráficos si ya hay datos cargados
+                // Re-renderizar la tabla si ya hay datos cargados
                 if (currentSheetData.length > 0) {
-                    displayPage(currentPage);
+                    displayPage(currentPage); 
                 }
             }
         });
@@ -935,7 +738,7 @@
             if (currentLanguage !== 'en') {
                 currentLanguage = 'en';
                 applyTranslations();
-                // Re-renderizar la tabla y los gráficos si ya hay datos cargados
+                // Re-renderizar la tabla si ya hay datos cargados
                 if (currentSheetData.length > 0) {
                     displayPage(currentPage);
                 }
