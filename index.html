@@ -149,12 +149,13 @@
             overflow: hidden; /* Asegura que los bordes redondeados funcionen */
         }
         th, td {
-            padding: 18px 25px; /* Padding más generoso */
+            padding: 15px 20px; /* Padding ligeramente reducido para más contenido */
             text-align: left;
             border-bottom: 1px solid var(--border-color); /* Borde inferior más suave */
             vertical-align: middle;
-            word-break: break-word; /* Permite que palabras largas se rompan */
-            hyphens: auto; /* Ayuda a la correcta separación de palabras en el break */
+            /* word-break: break-word; */ /* ¡Comentado para evitar la fragmentación! */
+            /* hyphens: auto; */ /* ¡Comentado! */
+            font-size: 0.9em; /* Fuente ligeramente más pequeña para mejor ajuste */
         }
         th {
             background-color: var(--primary-color); /* Color principal en encabezados */
@@ -162,8 +163,11 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            font-size: 0.9em;
+            font-size: 0.85em; /* Fuente más pequeña para títulos de columna */
             border-bottom: none; /* Sin borde inferior si hay color de fondo */
+            position: sticky; /* Hace que los encabezados se queden fijos al hacer scroll vertical */
+            top: 0; /* Alinea el encabezado en la parte superior */
+            z-index: 10; /* Asegura que el encabezado esté por encima del contenido de la tabla */
         }
         tr:nth-child(even) {
             background-color: var(--table-even-bg);
@@ -174,7 +178,7 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08); /* Sombra al pasar el ratón */
         }
         td {
-            font-size: 0.95em;
+            font-size: 0.9em; /* Fuente ligeramente más pequeña en celdas de contenido */
             color: #444;
             transition: background-color 0.2s ease; /* Transición suave para celdas */
         }
