@@ -3,162 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualizador de XLSX Atractivo</title>
+    <title>Visualizador de Datos XLSX</title>
     <style>
-        /* Fuente externa para un toque más profesional */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@500;600&display=swap');
+        /* Importa fuentes modernas para una mejor estética */
+        @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap');
+
+        :root {
+            --primary-color: #4CAF50; /* Verde principal */
+            --secondary-color: #3498db; /* Azul secundario para detalles */
+            --background-color: #f8f9fa; /* Gris muy claro */
+            --card-background: #ffffff; /* Fondo blanco para tarjetas */
+            --text-color: #333; /* Color de texto principal */
+            --text-muted: #7f8c8d; /* Texto secundario/desactivado */
+            --error-color: #e74c3c; /* Rojo para errores */
+            --loading-color: #e67e22; /* Naranja para carga */
+            --border-color: #dee2e6; /* Color de borde sutil */
+            --hover-bg: #e9ecef; /* Color de fondo al pasar el ratón */
+            --table-even-bg: #f9fbfd; /* Fondo de fila par suave */
+            --table-hover-bg: #eaf2f8; /* Fondo de fila al pasar el ratón */
+        }
 
         body {
-            font-family: 'Inter', sans-serif; /* Fuente principal moderna */
+            font-family: 'Rubik', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #eef2f3; /* Un gris muy claro y suave */
-            color: #333;
+            background-color: var(--background-color);
+            color: var(--text-color);
             line-height: 1.7;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Alinea al inicio verticalmente */
+            min-height: 100vh;
+            padding-top: 20px; /* Espacio en la parte superior */
         }
         .container {
-            max-width: 1100px;
-            margin: 30px auto;
-            background-color: #ffffff; /* Fondo blanco para el contenido */
+            width: 95%; /* Un poco más ancho */
+            max-width: 1200px;
+            background-color: var(--card-background);
             padding: 40px;
-            border-radius: 12px; /* Bordes más redondeados */
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Sombra más pronunciada */
+            border-radius: 15px; /* Bordes más redondeados */
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1); /* Sombra más pronunciada */
+            text-align: center;
         }
         h1 {
-            font-family: 'Poppins', sans-serif; /* Fuente más llamativa para títulos */
-            text-align: center;
-            color: #2c3e50; /* Un azul marino oscuro */
+            color: #2c3e50; /* Azul marino oscuro */
             margin-bottom: 40px;
             padding-bottom: 15px;
-            border-bottom: 3px solid #3498db; /* Un azul vibrante para el borde */
-            font-size: 2.5em; /* Título más grande */
+            border-bottom: 3px solid var(--primary-color); /* Usando el color principal */
+            font-size: 2.8em;
+            font-weight: 700;
         }
         .file-input-section {
-            text-align: center;
             margin-bottom: 40px;
-            padding: 30px;
-            background-color: #f8f9fa; /* Un gris claro para el área de carga */
-            border: 2px dashed #bdc3c7; /* Borde punteado más sutil */
-            border-radius: 8px;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
+            padding: 40px; /* Más padding */
+            background-color: #fdfdfe; /* Casi blanco */
+            border: 3px dashed var(--border-color); /* Borde más robusto pero sutil */
+            border-radius: 10px;
+            transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+            cursor: pointer; /* Indica que es interactivo */
         }
         .file-input-section:hover {
-            background-color: #e9ecef; /* Cambio de color al pasar el ratón */
-            border-color: #3498db; /* Color de borde más llamativo al pasar el ratón */
+            background-color: var(--hover-bg);
+            border-color: var(--primary-color); /* Color principal al pasar el ratón */
+            transform: translateY(-5px); /* Pequeña elevación */
         }
         .file-input-section label {
-            font-size: 1.3em;
-            font-weight: 600; /* Fuente semi-negrita */
-            color: #34495e; /* Azul grisáceo oscuro */
-            cursor: pointer;
-            display: block; /* Para que ocupe todo el ancho y el hover funcione mejor */
+            font-size: 1.5em; /* Etiqueta más grande */
+            font-weight: 700; /* Fuente muy negrita */
+            color: #444; /* Gris oscuro */
+            display: block;
             transition: color 0.3s ease;
         }
         .file-input-section label:hover {
-            color: #3498db; /* Azul principal al pasar el ratón */
+            color: var(--primary-color); /* Color principal al pasar el ratón */
         }
         #fileInput {
-            display: none; /* Oculta el input por defecto */
+            display: none;
         }
-        .message {
-            text-align: center;
-            font-style: italic;
-            color: #7f8c8d; /* Gris medio */
+        .message-box {
             margin-bottom: 30px;
+            padding: 20px 30px;
+            border-radius: 8px;
             font-size: 1.1em;
-            padding: 15px;
-            background-color: #e0f2f7; /* Fondo azul muy claro */
-            border-radius: 5px;
-            border-left: 5px solid #3498db; /* Borde lateral para destacar */
-        }
-        .error-message {
-            color: #e74c3c; /* Rojo para errores */
-            background-color: #fdd;
-            border-left-color: #e74c3c;
-        }
-        .loading-message {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
-            font-weight: 600;
-            color: #e67e22; /* Naranja */
-            margin-bottom: 30px;
-            font-size: 1.2em;
-            padding: 20px;
-            background-color: #fff3e0;
-            border-radius: 5px;
-            border-left: 5px solid #e67e22;
+            border-left-width: 8px; /* Borde lateral más grueso */
+            border-left-style: solid;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .message-box.info {
+            background-color: #e0f2f7; /* Azul muy claro */
+            border-left-color: var(--secondary-color);
+            color: var(--secondary-color);
+        }
+        .message-box.error {
+            background-color: #fdd; /* Rojo claro */
+            border-left-color: var(--error-color);
+            color: var(--error-color);
+            font-weight: 500;
+        }
+        .message-box.loading {
+            background-color: #fff3e0; /* Naranja claro */
+            border-left-color: var(--loading-color);
+            color: var(--loading-color);
+            font-weight: 500;
+        }
+        .message-box i { /* Para un posible icono si se quisiera añadir */
+            margin-right: 15px;
+            font-size: 1.4em;
         }
 
         table {
             width: 100%;
-            border-collapse: separate; /* Permite bordes redondeados en celdas */
-            border-spacing: 0 10px; /* Espacio vertical entre filas */
+            border-collapse: collapse; /* Restaurado para bordes más consistentes */
             margin-top: 20px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05); /* Sombra más sutil para la tabla */
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05); /* Sombra más sutil */
+            border-radius: 10px; /* Redondeado en la tabla completa */
+            overflow: hidden; /* Asegura que los bordes redondeados funcionen */
         }
         th, td {
-            padding: 15px 20px; /* Mayor padding */
+            padding: 18px 25px; /* Padding más generoso */
             text-align: left;
-            border-bottom: 1px solid #e0e0e0; /* Borde inferior más suave */
-            vertical-align: middle; /* Centra el contenido verticalmente */
+            border-bottom: 1px solid var(--border-color); /* Borde inferior más suave */
+            vertical-align: middle;
         }
         th {
-            background-color: #3498db; /* Azul principal para encabezados */
+            background-color: var(--primary-color); /* Color principal en encabezados */
             color: white;
-            font-weight: 700; /* Fuente negrita */
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            font-size: 0.95em;
-            border-bottom: none; /* Elimina el borde inferior si hay sombreado */
-            border-radius: 5px 5px 0 0; /* Redondea esquinas superiores */
+            font-size: 0.9em;
+            border-bottom: none; /* Sin borde inferior si hay color de fondo */
         }
         tr:nth-child(even) {
-            background-color: #f9fbfd; /* Un azul muy pálido para filas pares */
+            background-color: var(--table-even-bg);
         }
         tr:hover {
-            background-color: #eaf2f8; /* Azul más claro al pasar el ratón */
-            transform: translateY(-2px); /* Pequeña elevación al pasar el ratón */
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07); /* Sombra al pasar el ratón */
-            cursor: pointer;
+            background-color: var(--table-hover-bg);
+            transform: translateY(-3px); /* Elevación más notoria */
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08); /* Sombra al pasar el ratón */
         }
         td {
             font-size: 0.95em;
             color: #444;
+            transition: background-color 0.2s ease; /* Transición suave para celdas */
         }
         .no-data {
             text-align: center;
-            color: #95a5a6; /* Gris piedra */
-            font-size: 1.2em;
-            padding: 50px 20px;
+            color: var(--text-muted);
+            font-size: 1.3em;
+            padding: 60px 20px; /* Más espacio */
             font-weight: 500;
         }
 
         .pagination {
-            text-align: center;
             margin-top: 40px;
-            display: flex; /* Usar flexbox para alinear botones */
+            display: flex;
             justify-content: center;
             align-items: center;
+            flex-wrap: wrap; /* Permite que los botones pasen a la siguiente línea si no caben */
         }
         .pagination button {
-            background-color: #3498db; /* Azul principal */
+            background-color: var(--primary-color);
             color: white;
-            padding: 12px 20px;
-            margin: 0 8px;
+            padding: 12px 25px; /* Padding más amplio */
+            margin: 5px 10px; /* Margen para que no estén pegados */
             border: none;
-            border-radius: 6px; /* Bordes redondeados */
+            border-radius: 8px; /* Bordes más redondeados */
             cursor: pointer;
             font-size: 1em;
-            font-weight: 600;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            box-shadow: 0 3px 8px rgba(52, 152, 219, 0.3); /* Sombra para el botón */
+            font-weight: 700; /* Fuente muy negrita */
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3); /* Sombra verde */
         }
         .pagination button:hover {
-            background-color: #2980b9; /* Azul más oscuro al pasar el ratón */
-            transform: translateY(-2px); /* Elevación suave */
+            background-color: #388e3c; /* Verde más oscuro */
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.4);
         }
         .pagination button:active {
-            transform: translateY(0); /* Quita la elevación al hacer clic */
-            box-shadow: 0 1px 3px rgba(52, 152, 219, 0.5); /* Sombra más pequeña al hacer clic */
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.5);
         }
         .pagination button:disabled {
             background-color: #bdc3c7; /* Gris para botones deshabilitados */
@@ -168,24 +196,24 @@
             transform: none;
         }
         .pagination span {
-            font-weight: 600;
-            margin: 0 15px;
+            font-weight: 700; /* Muy negrita */
+            margin: 5px 15px; /* Margen para la información de página */
             color: #555;
-            font-size: 1.1em;
+            font-size: 1.2em;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Visualizador de Archivos XLSX</h1>
+        <h1>Visualizador de Datos XLSX</h1>
 
-        <div class="file-input-section">
+        <div class="file-input-section" id="dropZone">
             <label for="fileInput">Arrastra y suelta tu archivo XLSX aquí, o haz clic para seleccionarlo</label>
             <input type="file" id="fileInput" accept=".xlsx">
         </div>
 
-        <div id="messageArea" class="message">Por favor, selecciona o arrastra un archivo XLSX.</div>
-        <div id="loadingArea" class="loading-message" style="display: none;">Cargando y procesando archivo...</div>
+        <div id="messageArea" class="message-box info">Por favor, selecciona o arrastra un archivo XLSX.</div>
+        <div id="loadingArea" class="message-box loading" style="display: none;">Cargando y procesando archivo...</div>
         <div id="tableContainer">
             <!-- La tabla se generará aquí -->
         </div>
@@ -197,14 +225,16 @@
     </div>
 
     <!-- 
-        *** IMPORTANTE ***
-        Si tienes problemas de conexión a la CDN, descarga este archivo (xlsx.full.min.js)
-        desde https://cdn.sheetjs.com/ y guárdalo en la misma carpeta que este HTML.
-        Luego, comenta la línea de la CDN y descomenta la línea local.
+        *** SOLUCIÓN AL ERROR XLSX IS NOT DEFINED ***
+        1. Asegúrate de que la siguiente línea (CDN) esté DESCOMENTADA si tienes conexión a Internet estable
+           y si usas la URL correcta para la librería completa.
+        2. Si NO tienes conexión a Internet o la CDN da problemas, COMENTA la línea de la CDN
+           y ASEGÚRATE de haber descargado el archivo `xlsx.full.min.js` y guardarlo
+           en la MISMA CARPETA que este archivo HTML. Luego, DESCOMENTA la línea local.
     -->
-    <!-- CDN de SheetJS (usar si tienes conexión a Internet) -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/xlsx.full.min.js"></script>
-    <!-- Archivo local de SheetJS (descomentar si la CDN falla) -->
+    <!-- CDN de SheetJS (usar si tienes conexión a Internet y la URL es correcta) -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/xlsx.full.min.js"></script>
+    <!-- Archivo local de SheetJS (descomentar y guardar en la misma carpeta si la CDN falla) -->
     <!-- <script src="xlsx.full.min.js"></script> -->
 
     <script>
@@ -216,35 +246,47 @@
         const prevButton = document.getElementById('prevButton');
         const nextButton = document.getElementById('nextButton');
         const pageInfo = document.getElementById('pageInfo');
-        const fileInputSection = document.querySelector('.file-input-section');
+        const dropZone = document.getElementById('dropZone');
 
         let headers = []; // Para almacenar los encabezados de la tabla
         let currentSheetData = []; // Datos de la hoja actual para paginación
         let currentPage = 1;
-        const rowsPerPage = 15; // Número de filas a mostrar por página (ajustado para mejor visualización)
+        const rowsPerPage = 15; // Número de filas a mostrar por página
+
+        // --- Función para actualizar mensajes ---
+        function updateMessage(text, type = 'info') {
+            messageArea.textContent = text;
+            messageArea.classList.remove('info', 'error', 'loading'); // Limpia clases previas
+            messageArea.classList.add(type); // Añade la clase correcta
+            messageArea.style.display = 'flex'; // Asegura que sea visible como flex para el layout interno
+            loadingArea.style.display = 'none'; // Siempre oculta el de carga cuando mostramos otro mensaje
+        }
 
         // --- Manejo de Drag & Drop ---
-        fileInputSection.addEventListener('dragover', (e) => {
+        dropZone.addEventListener('dragover', (e) => {
             e.preventDefault(); // Prevenir comportamiento por defecto
-            fileInputSection.style.backgroundColor = '#e9ecef'; // Feedback visual
-            fileInputSection.style.borderColor = '#3498db';
+            dropZone.style.backgroundColor = 'var(--hover-bg)';
+            dropZone.style.borderColor = 'var(--primary-color)';
+            dropZone.style.transform = 'translateY(-5px)';
         });
 
-        fileInputSection.addEventListener('dragleave', (e) => {
+        dropZone.addEventListener('dragleave', (e) => {
             e.preventDefault();
-            fileInputSection.style.backgroundColor = '#f8f9fa'; // Restaurar color
-            fileInputSection.style.borderColor = '#bdc3c7';
+            dropZone.style.backgroundColor = '#fdfdfe'; // Color original del input
+            dropZone.style.borderColor = 'var(--border-color)';
+            dropZone.style.transform = 'translateY(0)';
         });
 
-        fileInputSection.addEventListener('drop', (e) => {
+        dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
-            fileInputSection.style.backgroundColor = '#f8f9fa'; // Restaurar color
-            fileInputSection.style.borderColor = '#bdc3c7';
+            dropZone.style.backgroundColor = '#fdfdfe'; // Restaurar color
+            dropZone.style.borderColor = 'var(--border-color)';
+            dropZone.style.transform = 'translateY(0)';
 
             const files = e.dataTransfer.files;
             if (files.length > 0) {
-                fileInput.files = files; // Asignar los archivos al input
-                handleFileProcessing(); // Procesar el archivo
+                fileInput.files = files; // Asigna los archivos al input
+                handleFileProcessing(); // Procesa el archivo
             }
         });
 
@@ -262,25 +304,25 @@
                 return;
             }
 
-            // Limpiar estado anterior
-            messageArea.style.display = 'none';
-            loadingArea.style.display = 'block';
+            // Limpiar estado anterior y mostrar carga
             tableContainer.innerHTML = '';
             paginationContainer.style.display = 'none';
             currentPage = 1; // Resetear página al cargar nuevo archivo
+            updateMessage('Cargando y procesando archivo...', 'loading');
 
             const reader = new FileReader();
             reader.onload = function(event) {
                 try {
-                    // Verificar si XLSX está definido ANTES de usarlo
+                    // VERIFICAR SI XLSX ESTÁ DEFINIDO ANTES DE USARLO
                     if (typeof XLSX === 'undefined') {
-                        throw new Error('La librería SheetJS (XLSX) no está cargada correctamente. Asegúrate de que el archivo JS se incluyó correctamente.');
+                        // Si este error aparece, es que la URL de la CDN (o el archivo local) falló
+                        throw new Error('La librería SheetJS (XLSX) no está cargada. Verifica la URL de la CDN o la inclusión del archivo JS local.');
                     }
 
                     const binaryString = event.target.result;
                     const workbook = XLSX.read(binaryString, { type: 'binary' });
 
-                    // Obtener la primera hoja
+                    // Obtener la primera hoja (si existen varias, puedes añadir un selector)
                     const sheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[sheetName];
 
@@ -288,7 +330,8 @@
                         throw new Error('No se pudo leer la hoja del archivo.');
                     }
 
-                    // Convertir la hoja a JSON. header: 1 hace que la primera fila sea encabezados.
+                    // Convertir la hoja a JSON. `header: 1` pone la primera fila como encabezados.
+                    // `defval: ""` asegura que las celdas vacías no sean `undefined`.
                     const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
 
                     if (data.length === 0) {
@@ -297,16 +340,13 @@
 
                     // Procesar y mostrar los datos
                     processAndDisplayData(data);
-                    loadingArea.style.display = 'none';
 
                 } catch (error) {
-                    loadingArea.style.display = 'none';
                     updateMessage(`Error: ${error.message}`, 'error');
                 }
             };
 
             reader.onerror = function(event) {
-                loadingArea.style.display = 'none';
                 updateMessage('Error al leer el archivo.', 'error');
             };
 
@@ -345,7 +385,7 @@
             // Crear filas de datos
             tableHtml += '<tbody>';
             if (pageData.length > 0) {
-                pageData.forEach((row, rowIndex) => {
+                pageData.forEach((row) => {
                     tableHtml += '<tr>';
                     // Asegurarnos de que cada fila tenga tantos elementos como encabezados
                     for (let i = 0; i < headers.length; i++) {
@@ -355,12 +395,14 @@
                     tableHtml += '</tr>';
                 });
             } else {
+                // Mensaje si una página está vacía
                 tableHtml += `<tr><td colspan="${headers.length}" class="no-data">No hay datos en esta página.</td></tr>`;
             }
             tableHtml += '</tbody>';
 
             tableHtml += '</table>';
             tableContainer.innerHTML = tableHtml;
+            loadingArea.style.display = 'none'; // Ocultar carga una vez que la tabla está lista
 
             // Actualizar información de paginación
             const totalPages = Math.ceil(currentSheetData.length / rowsPerPage);
@@ -377,7 +419,7 @@
                 prevButton.disabled = currentPage === 1;
                 nextButton.disabled = currentPage === totalPages;
             } else {
-                paginationContainer.style.display = 'none';
+                paginationContainer.style.display = 'none'; // Ocultar si no hay datos
             }
         }
 
@@ -397,18 +439,8 @@
             }
         });
 
-        // Función para actualizar mensajes con estilo
-        function updateMessage(text, type = 'info') {
-            messageArea.textContent = text;
-            messageArea.style.display = 'block';
-            messageArea.classList.remove('error-message'); // Remover clase anterior
-            if (type === 'error') {
-                messageArea.classList.add('error-message');
-            }
-        }
-
         // Inicializar mensaje al cargar la página
-        updateMessage('Por favor, selecciona o arrastra un archivo XLSX.');
+        updateMessage('Por favor, selecciona o arrastra un archivo XLSX.', 'info');
 
     </script>
 </body>
