@@ -16,7 +16,7 @@
             --text-color: #333; /* Color de texto principal */
             --text-muted: #7f8c8d; /* Texto secundario/desactivado */
             --error-color: #e74c3c; /* Rojo para errores */
-            --loading-color: #e67e22; /* Naranja para carga */
+            --loading-color: #f8f9fa; /* Naranja para carga */
             --border-color: #dee2e6; /* Color de borde sutil */
             --hover-bg: #e9ecef; /* Color de fondo al pasar el ratón */
             --table-even-bg: #f9fbfd; /* Fondo de fila par suave */
@@ -178,7 +178,7 @@
         }
 
         table {
-            width: 100%; /* Cambiado a 100% para que el wrapper controle el scroll */
+            width: 150%; /* Cambiado a 100% para que el wrapper controle el scroll */
             border-collapse: collapse; /* Bordes consistentes */
             min-width: 800px; /* Ancho mínimo para que el scroll se active */
             border-radius: 10px; /* Redondeado aplicado a la tabla */
@@ -196,8 +196,8 @@
             color: white;
             font-weight: 400;
             text-transform: uppercase;
-            letter-spacing: 0.8px;
-            font-size: 0.75em; /* Fuente más pequeña para títulos de columna */
+            letter-spacing: 0.5px;
+            font-size: 0.70em; /* Fuente más pequeña para títulos de columna */
             border-bottom: none; /* Sin borde inferior si hay color de fondo */
             position: sticky; /* Hace que los encabezados se queden fijos al hacer scroll vertical */
             top: 0; /* Alinea el encabezado en la parte superior */
@@ -212,7 +212,7 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08); /* Sombra al pasar el ratón */
         }
         td {
-            font-size: 0.70em; /* Fuente ligeramente más pequeña en celdas de contenido */
+            font-size: 0.65em; /* Fuente ligeramente más pequeña en celdas de contenido */
             color: #444;
             transition: background-color 0.2s ease; /* Transición suave para celdas */
         }
@@ -641,7 +641,6 @@
 
             displayPage(currentPage); // Mostrar la página actual
             setupPagination(currentSheetData.length); // Configurar paginación
-            loadingArea.style.display = 'none'; // Ocultar carga una vez que la tabla está lista
         }
 
         function displayPage(page) {
