@@ -338,7 +338,7 @@
             messageArea.classList.remove('info', 'error', 'loading'); // Limpia clases previas
             messageArea.classList.add(type); // Añade la clase correcta
             messageArea.style.display = 'flex'; // Asegura que sea visible como flex para el layout interno
-            loadingArea.style.display = 'initial'; // Siempre oculta el de carga cuando mostramos otro mensaje
+            loadingArea.style.display = 'none'; // Siempre oculta el de carga cuando mostramos otro mensaje
         }
 
         // --- Manejo de Drag & Drop ---
@@ -476,7 +476,7 @@
 
             displayPage(currentPage); // Mostrar la página actual
             setupPagination(currentSheetData.length); // Configurar paginación
-            loadingArea.style.display = 'none'; // Ocultar carga una vez que la tabla está lista
+            loadingArea.style.display = 'hidden'; // Ocultar carga una vez que la tabla está lista
         }
 
         function displayPage(page) {
