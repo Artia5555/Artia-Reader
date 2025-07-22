@@ -16,7 +16,7 @@
             --text-color: #333; /* Color de texto principal */
             --text-muted: #7f8c8d; /* Texto secundario/desactivado */
             --error-color: #e74c3c; /* Rojo para errores */
-            --loading-color: #e67e22; /* Naranja para carga */
+            --loading-color: #f8f9fa; /* Naranja para carga */
             --border-color: #dee2e6; /* Color de borde sutil */
             --hover-bg: #e9ecef; /* Color de fondo al pasar el ratón */
             --table-even-bg: #f9fbfd; /* Fondo de fila par suave */
@@ -270,18 +270,21 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            box-sizing: border-box; /* Incluye padding y borde en el ancho total */
         }
         .chart-title {
-            font-size: 1.3em;
+            font-size: 1.1em; /* Tamaño de fuente más pequeño para títulos de gráfico */
             font-weight: 700;
             color: #2c3e50;
             margin-bottom: 15px;
             border-bottom: 2px solid var(--primary-color);
             padding-bottom: 5px;
+            width: 100%; /* Asegura que el título ocupe el ancho disponible */
         }
         .chart-canvas {
             max-width: 100%; /* Asegura que el canvas no exceda su contenedor */
-            height: 300px; /* Altura fija para los gráficos */
+            height: 280px; /* Altura fija para los gráficos más pequeños */
+            width: 100% !important; /* Asegura que el canvas tome el ancho del wrapper */
         }
 
         .pagination {
@@ -382,7 +385,7 @@
         *** CONFIGURACIÓN PARA DESPLIEGUE WEB (Vercel/GitHub) ***
         1. ASEGÚRATE de que la siguiente línea de la CDN (la que tiene la URL actualizada) esté DESCOMENTADA.
            Esta es la línea que Vercel necesita para cargar SheetJS.
-        2. ASEGÚRATE de que la línea que apunta a `xlsx.full.min.js` local esté COMENTADA con.
+        2. ASEGÚRATE de que la línea que apunta a `xlsx.full.min.js` local esté COMENTADA con `<!-- `.
         3. Sube este archivo HTML a tu repositorio de GitHub. Vercel usará la CDN de SheetJS.
     -->
     <!-- CDN de SheetJS (versión correcta para Vercel/Web) -->
@@ -412,7 +415,7 @@
                     readFileError: "Error al leer el archivo.",
                     noData: "No hay datos para mostrar.",
                     emptySheet: "La hoja seleccionada está vacía.",
-                    noChartData: "No hay datos suficientes para generar gráficos." // Mensaje si no hay gráficos
+                    noChartData: "No hay datos suficientes para generar gráficos."
                 },
                 chartTitles: {
                     platform: "Distribución por Plataforma",
@@ -639,7 +642,7 @@
                     const parts = messageArea.textContent.split(':');
                     const originalError = parts.length > 1 ? parts[1].trim() : '';
                     updateMessage(`${translate('message.error')} ${originalError || ''}`, 'error');
-                } else if (messageArea.classList.க்கூடிய('loading')) {
+                } else if (messageArea.classList.contains('loading')) {
                     updateMessage(translate('message.processing'), 'loading');
                 } else {
                     updateMessage(translate('message.selectFile'), 'info');
@@ -802,8 +805,6 @@
 
         function processAndDisplayData(data) {
             // La primera fila son los encabezados
-            // Nota: La traducción de los encabezados de columna no está implementada aquí.
-            // Si necesitas traducir los nombres de las columnas dinámicamente, requeriría un mapeo adicional.
             headers = data[0].map(header => header ? header.toString().trim() : ''); 
             currentSheetData = data.slice(1); // Datos del cuerpo de la tabla
 
@@ -876,15 +877,14 @@
             chartsContainer.style.display = 'flex'; // Mostrar el contenedor de gráficos
 
             // --- Configuración de Columnas a Graficar ---
-            // Aquí puedes definir qué columnas quieres graficar.
-            // El formato es: 'NombreDeColumnaEnExcel': 'tipoDeGrafico' (pie o bar)
-            // Asegúrate de que los nombres de columna coincidan exactamente con los encabezados de tu Excel.
+            // Aquí puedes definir qué columnas quieres graficar y de qué tipo.
+            // Prioriza columnas con más de 2 categorías para que los gráficos sean informativos.
             const columnsToChart = {
                 'Platform': 'pie',
                 'If yes, which one are you more comfortable with?': 'pie',
                 'Do you have experience in construction or roofing?': 'bar',
-                'State': 'bar', // Ejemplo para añadir más
-                'Lead status': 'pie' // Ejemplo para añadir más
+                'State': 'bar',
+                'Lead status': 'pie'
             };
 
             let chartsCreated = 0; // Contador para saber si se generó algún gráfico
@@ -893,7 +893,8 @@
                 const chartType = columnsToChart[columnName];
                 const dataCounts = countOccurrences(data, columnName);
 
-                if (Object.keys(dataCounts).length > 1) { // Solo graficar si hay al menos 2 categorías diferentes
+                // Solo graficar si hay al menos 2 categorías diferentes y más de 2 datos en total
+                if (Object.keys(dataCounts).length >= 2 && Object.values(dataCounts).reduce((sum, count) => sum + count, 0) > 2) {
                     const chartDiv = document.createElement('div');
                     chartDiv.classList.add('chart-wrapper');
                     // Generamos un ID único basado en el nombre de la columna
@@ -905,12 +906,19 @@
                     `;
                     chartsContainer.appendChild(chartDiv);
 
-                    if (chartType === 'pie') {
-                        createPieChart(chartId, columnName.toLowerCase().replace(/[^a-z0-9]/g, ''), dataCounts); // Pasar clave de traducción
-                    } else if (chartType === 'bar') {
-                        createBarChart(chartId, columnName.toLowerCase().replace(/[^a-z0-9]/g, ''), dataCounts); // Pasar clave de traducción
+                    try {
+                        if (chartType === 'pie') {
+                            createPieChart(chartId, columnName.toLowerCase().replace(/[^a-z0-9]/g, ''), dataCounts);
+                        } else if (chartType === 'bar') {
+                            createBarChart(chartId, columnName.toLowerCase().replace(/[^a-z0-9]/g, ''), dataCounts);
+                        }
+                        chartsCreated++;
+                    } catch (e) {
+                        console.error(`Error rendering chart for column "${columnName}":`, e);
+                        // Si hay un error al crear el gráfico, podemos mostrar un mensaje en su lugar
+                        chartDiv.querySelector('.chart-title').textContent = `${translate('message.error')} ${translate('chartTitles.' + columnName.toLowerCase().replace(/[^a-z0-9]/g, ''))}`;
+                        chartDiv.querySelector('.chart-canvas').remove(); // Eliminar el canvas si falla
                     }
-                    chartsCreated++;
                 }
             }
 
@@ -918,7 +926,11 @@
             if (chartsCreated === 0) {
                 chartsContainer.style.display = 'block'; // Mostrar contenedor para el mensaje
                 chartsContainer.innerHTML = '<div class="no-data">' + translate('message.noChartData') + '</div>';
+            } else {
+                // Si se crearon gráficos, asegurar que el contenedor de gráficos sea visible
+                chartsContainer.style.display = 'flex';
             }
+            loadingArea.style.display = 'none'; // Ocultar carga una vez que todo está renderizado
         }
 
 
