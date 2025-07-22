@@ -385,7 +385,7 @@
         *** CONFIGURACIÓN PARA DESPLIEGUE WEB (Vercel/GitHub) ***
         1. ASEGÚRATE de que la siguiente línea de la CDN (la que tiene la URL actualizada) esté DESCOMENTADA.
            Esta es la línea que Vercel necesita para cargar SheetJS.
-        2. ASEGÚRATE de que la línea que apunta a `xlsx.full.min.js` local esté COMENTADA con `<!-- `.
+        2. ASEGÚRATE de que la línea que apunta a `xlsx.full.min.js` local esté COMENTADA con `<!--.
         3. Sube este archivo HTML a tu repositorio de GitHub. Vercel usará la CDN de SheetJS.
     -->
     <!-- CDN de SheetJS (versión correcta para Vercel/Web) -->
@@ -551,57 +551,6 @@
             });
         }
 
-        // Función para crear un gráfico de barras
-        function createBarChart(id, titleKey, dataCounts) {
-            const chartData = {
-                labels: Object.keys(dataCounts),
-                datasets: [{
-                    label: translate('chartTitles.count'), // Etiqueta para el dataset
-                    data: Object.values(dataCounts),
-                    backgroundColor: [
-                        '#4CAF50', '#2196F3', '#FFC107', '#F44336', '#9C27B0', '#FF9800', '#00BCD4', '#E91E63', '#607D8B'
-                    ],
-                    borderColor: '#fff',
-                    borderWidth: 1
-                }]
-            };
-
-            const ctx = document.getElementById(id)?.getContext('2d');
-            if (!ctx) {
-                console.error(`Canvas element with id "${id}" not found.`);
-                return;
-            }
-            // Destruir gráfico anterior si existe
-            if (window.myCharts && window.myCharts[id]) {
-                window.myCharts[id].destroy();
-            }
-            window.myCharts = window.myCharts || {}; // Inicializa el objeto si no existe
-            window.myCharts[id] = new Chart(ctx, {
-                type: 'bar',
-                data: chartData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: translate(`chartTitles.${titleKey}`),
-                            font: { size: 16, weight: 'bold' },
-                            color: '#2c3e50'
-                        },
-                        legend: {
-                            display: false // Ocultar leyenda para gráficos de barras simples
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-
         // --- Función para actualizar mensajes ---
         function updateMessage(text, type = 'info') {
             messageArea.textContent = text;
@@ -668,9 +617,13 @@
         // Función auxiliar para actualizar títulos de gráficos después de un cambio de idioma
         function updateChartTitles(chartKeys) {
             chartKeys.forEach(key => {
-                const chartTitleElement = document.querySelector(`#${key}ChartPractice + .chart-title`); // Busca el título del gráfico
-                if (chartTitleElement) {
-                    chartTitleElement.textContent = translate(`chartTitles.${key}`);
+                // Busca el elemento de título dentro del contenedor del gráfico, asumiendo una estructura específica
+                const chartWrapper = document.querySelector(`canvas[id^="${key}Chart"]?.parentElement`); // Busca el padre del canvas
+                if (chartWrapper) {
+                    const chartTitleElement = chartWrapper.querySelector('.chart-title');
+                    if (chartTitleElement) {
+                        chartTitleElement.textContent = translate(`chartTitles.${key}`);
+                    }
                 }
             });
         }
@@ -805,6 +758,8 @@
 
         function processAndDisplayData(data) {
             // La primera fila son los encabezados
+            // Nota: La traducción de los encabezados de columna no está implementada aquí.
+            // Si necesitas traducir los nombres de las columnas dinámicamente, requeriría un mapeo adicional.
             headers = data[0].map(header => header ? header.toString().trim() : ''); 
             currentSheetData = data.slice(1); // Datos del cuerpo de la tabla
 
@@ -877,8 +832,8 @@
             chartsContainer.style.display = 'flex'; // Mostrar el contenedor de gráficos
 
             // --- Configuración de Columnas a Graficar ---
-            // Aquí puedes definir qué columnas quieres graficar y de qué tipo.
-            // Prioriza columnas con más de 2 categorías para que los gráficos sean informativos.
+            // Define qué columnas quieres graficar y de qué tipo ('pie' o 'bar').
+            // Se priorizan columnas con al menos 3 categorías para que los gráficos sean informativos.
             const columnsToChart = {
                 'Platform': 'pie',
                 'If yes, which one are you more comfortable with?': 'pie',
@@ -893,11 +848,11 @@
                 const chartType = columnsToChart[columnName];
                 const dataCounts = countOccurrences(data, columnName);
 
-                // Solo graficar si hay al menos 2 categorías diferentes y más de 2 datos en total
+                // Solo graficar si hay al menos 2 categorías diferentes Y el número total de datos > 2
                 if (Object.keys(dataCounts).length >= 2 && Object.values(dataCounts).reduce((sum, count) => sum + count, 0) > 2) {
                     const chartDiv = document.createElement('div');
                     chartDiv.classList.add('chart-wrapper');
-                    // Generamos un ID único basado en el nombre de la columna
+                    // Generamos un ID único basado en el nombre de la columna (limpiando caracteres no válidos)
                     const chartId = `${columnName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')}Chart`; 
                     
                     chartDiv.innerHTML = `
@@ -915,9 +870,15 @@
                         chartsCreated++;
                     } catch (e) {
                         console.error(`Error rendering chart for column "${columnName}":`, e);
-                        // Si hay un error al crear el gráfico, podemos mostrar un mensaje en su lugar
-                        chartDiv.querySelector('.chart-title').textContent = `${translate('message.error')} ${translate('chartTitles.' + columnName.toLowerCase().replace(/[^a-z0-9]/g, ''))}`;
-                        chartDiv.querySelector('.chart-canvas').remove(); // Eliminar el canvas si falla
+                        // Si hay un error al crear el gráfico, puedes mostrar un mensaje de error en su lugar
+                        const chartTitleElement = chartDiv.querySelector('.chart-title');
+                        if (chartTitleElement) {
+                            chartTitleElement.textContent = `${translate('message.error')} ${translate(`chartTitles.${columnName.toLowerCase().replace(/[^a-z0-9]/g, '')}`) || columnName}`;
+                        }
+                        const canvasElement = chartDiv.querySelector('.chart-canvas');
+                        if (canvasElement) {
+                            canvasElement.remove(); // Eliminar el canvas si falla
+                        }
                     }
                 }
             }
