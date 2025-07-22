@@ -225,17 +225,16 @@
     </div>
 
     <!-- 
-        *** SOLUCIÓN AL ERROR XLSX IS NOT DEFINED ***
-        1. Asegúrate de que la siguiente línea (CDN) esté DESCOMENTADA si tienes conexión a Internet estable
-           y si usas la URL correcta para la librería completa.
-        2. Si NO tienes conexión a Internet o la CDN da problemas, COMENTA la línea de la CDN
-           y ASEGÚRATE de haber descargado el archivo `xlsx.full.min.js` y guardarlo
-           en la MISMA CARPETA que este archivo HTML. Luego, DESCOMENTA la línea local.
+        *** CONFIGURACIÓN PARA USO LOCAL DE SheetJS ***
+        1. ASEGÚRATE de haber descargado `xlsx.full.min.js` desde https://cdn.sheetjs.com/
+        2. Guarda ese archivo `xlsx.full.min.js` en la MISMA CARPETA que este archivo HTML.
+        3. VERIFICA que la línea `src="xlsx.full.min.js"` de abajo esté DESCOMENTADA.
+        4. VERIFICA que la línea de la CDN (la que tiene `cdn.sheetjs.com`) esté COMENTADA con `<!-- -->`.
     -->
-    <!-- CDN de SheetJS (usar si tienes conexión a Internet y la URL es correcta) -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/xlsx.full.min.js"></script>
-    <!-- Archivo local de SheetJS (descomentar y guardar en la misma carpeta si la CDN falla) -->
-    <!-- <script src="xlsx.full.min.js"></script> -->
+    <!-- CDN de SheetJS (comentar si usas el archivo local) -->
+    <!-- <script src="https://cdn.sheetjs.com/xlsx-0.20.3/xlsx.full.min.js"></script> -->
+    <!-- Archivo local de SheetJS (asegúrate de que el archivo existe en la misma carpeta) -->
+    <script src="xlsx.full.min.js"></script>
 
     <script>
         const fileInput = document.getElementById('fileInput');
