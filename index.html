@@ -121,7 +121,7 @@
             font-weight: 500;
         }
         .message-box.loading {
-            background-color: #fff3e0; /* Naranja claro */
+            background-color: #07e332; /* verde claro */
             border-left-color: var(--loading-color);
             color: var(--loading-color);
             font-weight: 500;
@@ -338,7 +338,7 @@
             messageArea.classList.remove('info', 'error', 'loading'); // Limpia clases previas
             messageArea.classList.add(type); // Añade la clase correcta
             messageArea.style.display = 'flex'; // Asegura que sea visible como flex para el layout interno
-            loadingArea.style.display = 'none'; // Siempre oculta el de carga cuando mostramos otro mensaje
+            loadingArea.style.display = 'initial'; // Siempre oculta el de carga cuando mostramos otro mensaje
         }
 
         // --- Manejo de Drag & Drop ---
