@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualizador de Datos XLSX</title>
+    <title>Visualizador de Datos XLSX - Artia</title>
     <style>
         /* Importa fuentes modernas para una mejor estética */
         @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap');
@@ -45,14 +45,30 @@
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1); /* Sombra más pronunciada */
             text-align: center;
         }
+        .logo-container {
+            margin-bottom: 20px; /* Espacio entre logo y título */
+        }
+        .logo {
+            height: 50px; /* Ajusta la altura del logo como necesites */
+            margin: 0 auto; /* Centra el logo */
+            display: block;
+        }
         h1 {
             color: #2c3e50; /* Azul marino oscuro */
-            margin-bottom: 40px;
+            margin-bottom: 10px; /* Menos espacio abajo del título */
             padding-bottom: 15px;
             border-bottom: 3px solid var(--primary-color); /* Usando el color principal */
             font-size: 2.8em;
             font-weight: 700;
         }
+        .powered-by {
+            font-size: 0.9em;
+            color: var(--text-muted);
+            font-style: italic;
+            margin-top: 0;
+            margin-bottom: 30px; /* Espacio después de "Powered by" */
+        }
+
         .file-input-section {
             margin-bottom: 40px;
             padding: 40px; /* Más padding */
@@ -159,6 +175,34 @@
             font-weight: 500;
         }
 
+        .sheet-selector-container {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px; /* Espacio entre label y select */
+            flex-wrap: wrap;
+        }
+        .sheet-selector-container label {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #555;
+        }
+        .sheet-selector-container select {
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            min-width: 150px; /* Ancho mínimo */
+            transition: border-color 0.3s ease;
+        }
+        .sheet-selector-container select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+        }
+
         .pagination {
             margin-top: 40px;
             display: flex;
@@ -205,7 +249,19 @@
 </head>
 <body>
     <div class="container">
+        <!-- Logo de Artia -->
+        <div class="logo-container">
+            <img src="https://i.ibb.co/1kJRQj2/logo-artia-azul.png" alt="Logo Artia" class="logo">
+        </div>
+
         <h1>Visualizador de Datos XLSX</h1>
+        <p class="powered-by">Powered by Artia: Marketing & Publicidad Integral</p>
+
+        <!-- Selector de Hojas -->
+        <div id="sheetSelectorContainer" class="sheet-selector-container" style="display: none;">
+            <label for="sheetSelect">Seleccionar Hoja:</label>
+            <select id="sheetSelect"></select>
+        </div>
 
         <div class="file-input-section" id="dropZone">
             <label for="fileInput">Arrastra y suelta tu archivo XLSX aquí, o haz clic para seleccionarlo</label>
@@ -227,9 +283,9 @@
     <!-- 
         *** CONFIGURACIÓN PARA DESPLIEGUE WEB (Vercel/GitHub) ***
         1. ASEGÚRATE de que la siguiente línea de la CDN (la que tiene la URL actualizada) esté DESCOMENTADA.
-        2. ASEGÚRATE de que la línea que apunta a `xlsx.full.min.js` local esté COMENTADA con 
-        3. Sube este archivo HTML y la carpeta donde tienes tu `xlsx.full.min.js` (si la usaras) a tu repositorio de GitHub.
-           Pero para Vercel, solo necesitamos la línea de la CDN activa. -->
+        2. ASEGÚRATE de que la línea que apunta a `xlsx.full.min.js` local esté COMENTADA con
+        3. Sube este archivo HTML a tu repositorio de GitHub. Vercel usará la CDN de SheetJS.
+    -->
     <!-- CDN de SheetJS (versión correcta para Vercel/Web) -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/xlsx.full.min.js"></script>
     <!-- Archivo local de SheetJS (comentar esta línea para el despliegue en Vercel) -->
@@ -245,7 +301,11 @@
         const nextButton = document.getElementById('nextButton');
         const pageInfo = document.getElementById('pageInfo');
         const dropZone = document.getElementById('dropZone');
+        const sheetSelectorContainer = document.getElementById('sheetSelectorContainer');
+        const sheetSelect = document.getElementById('sheetSelect');
 
+        let workbook = null; // Para almacenar el workbook completo una vez leído
+        let currentSheetName = ''; // Nombre de la hoja actualmente mostrada
         let headers = []; // Para almacenar los encabezados de la tabla
         let currentSheetData = []; // Datos de la hoja actual para paginación
         let currentPage = 1;
@@ -305,65 +365,94 @@
             // Limpiar estado anterior y mostrar carga
             tableContainer.innerHTML = '';
             paginationContainer.style.display = 'none';
+            sheetSelectorContainer.style.display = 'none'; // Ocultar selector de hojas hasta que haya datos
             currentPage = 1; // Resetear página al cargar nuevo archivo
             updateMessage('Cargando y procesando archivo...', 'loading');
 
             const reader = new FileReader();
             reader.onload = function(event) {
                 try {
-                    // VERIFICAR SI XLSX ESTÁ DEFINIDO ANTES DE USARLO
                     if (typeof XLSX === 'undefined') {
-                        // Este error ahora debería ser menos probable con la CDN
                         throw new Error('La librería SheetJS (XLSX) no está cargada. Verifica la URL de la CDN o la inclusión del archivo JS local.');
                     }
 
                     const binaryString = event.target.result;
-                    const workbook = XLSX.read(binaryString, { type: 'binary' });
+                    // Almacenamos el workbook completo para poder cambiar de hoja
+                    workbook = XLSX.read(binaryString, { type: 'binary' });
 
-                    // Obtener la primera hoja (si existen varias, puedes añadir un selector)
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
+                    // Llenar el selector de hojas
+                    populateSheetSelector(workbook);
 
-                    if (!worksheet) {
-                        throw new Error('No se pudo leer la hoja del archivo.');
+                    // Procesar y mostrar la primera hoja por defecto
+                    const firstSheetName = workbook.SheetNames[0];
+                    if (firstSheetName) {
+                        displaySheet(firstSheetName);
+                    } else {
+                        throw new Error('El archivo no contiene hojas.');
                     }
-
-                    // Convertir la hoja a JSON. `header: 1` pone la primera fila como encabezados.
-                    // `defval: ""` asegura que las celdas vacías no sean `undefined`.
-                    const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
-
-                    if (data.length === 0) {
-                        throw new Error('El archivo está vacío o no contiene datos.');
-                    }
-
-                    // Procesar y mostrar los datos
-                    processAndDisplayData(data);
 
                 } catch (error) {
                     updateMessage(`Error: ${error.message}`, 'error');
+                    workbook = null; // Resetear workbook en caso de error
                 }
             };
 
             reader.onerror = function(event) {
                 updateMessage('Error al leer el archivo.', 'error');
+                workbook = null;
             };
 
             reader.readAsBinaryString(file);
         }
 
-        function processAndDisplayData(data) {
-            if (!data || data.length === 0) {
-                tableContainer.innerHTML = '<div class="no-data">No hay datos para mostrar.</div>';
+        function populateSheetSelector(wb) {
+            const sheetNames = wb.SheetNames;
+            sheetSelect.innerHTML = ''; // Limpiar opciones anteriores
+
+            sheetNames.forEach((sheetName, index) => {
+                const option = document.createElement('option');
+                option.value = sheetName;
+                option.textContent = sheetName;
+                if (index === 0) {
+                    option.selected = true; // Seleccionar la primera hoja por defecto
+                }
+                sheetSelect.appendChild(option);
+            });
+
+            sheetSelectorContainer.style.display = 'flex'; // Mostrar el selector de hojas
+            loadingArea.style.display = 'none'; // Ocultar carga una vez que el selector está listo
+        }
+
+        function displaySheet(sheetName) {
+            if (!workbook || !workbook.Sheets[sheetName]) {
+                updateMessage('Hoja no encontrada.', 'error');
+                return;
+            }
+
+            currentSheetName = sheetName;
+            const worksheet = workbook.Sheets[sheetName];
+
+            // Convertir la hoja a JSON. `header: 1` pone la primera fila como encabezados.
+            // `defval: ""` asegura que las celdas vacías no sean `undefined`.
+            const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+
+            if (data.length === 0) {
+                tableContainer.innerHTML = '<div class="no-data">La hoja seleccionada está vacía.</div>';
                 paginationContainer.style.display = 'none';
                 return;
             }
 
+            processAndDisplayData(data);
+        }
+
+        function processAndDisplayData(data) {
             // La primera fila son los encabezados
             headers = data[0].map(header => header ? header.toString().trim() : ''); // Limpiar encabezados
             currentSheetData = data.slice(1); // Datos del cuerpo de la tabla
 
-            displayPage(currentPage);
-            setupPagination(currentSheetData.length);
+            displayPage(currentPage); // Mostrar la página actual
+            setupPagination(currentSheetData.length); // Configurar paginación
+            loadingArea.style.display = 'none'; // Ocultar carga
         }
 
         function displayPage(page) {
@@ -400,7 +489,6 @@
 
             tableHtml += '</table>';
             tableContainer.innerHTML = tableHtml;
-            loadingArea.style.display = 'none'; // Ocultar carga una vez que la tabla está lista
 
             // Actualizar información de paginación
             const totalPages = Math.ceil(currentSheetData.length / rowsPerPage);
@@ -435,6 +523,12 @@
                 currentPage++;
                 displayPage(currentPage);
             }
+        });
+
+        // Event listener para el selector de hojas
+        sheetSelect.addEventListener('change', (event) => {
+            currentPage = 1; // Resetear página al cambiar de hoja
+            displaySheet(event.target.value);
         });
 
         // Inicializar mensaje al cargar la página
