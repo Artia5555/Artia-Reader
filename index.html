@@ -382,7 +382,7 @@
         *** CONFIGURACIÓN PARA DESPLIEGUE WEB (Vercel/GitHub) ***
         1. ASEGÚRATE de que la siguiente línea de la CDN (la que tiene la URL actualizada) esté DESCOMENTADA.
            Esta es la línea que Vercel necesita para cargar SheetJS.
-        2. ASEGÚRATE de que la línea que apunta a `xlsx.full.min.js` local esté COMENTADA con .
+        2. ASEGÚRATE de que la línea que apunta a `xlsx.full.min.js` local esté COMENTADA con.
         3. Sube este archivo HTML a tu repositorio de GitHub. Vercel usará la CDN de SheetJS.
     -->
     <!-- CDN de SheetJS (versión correcta para Vercel/Web) -->
@@ -417,8 +417,8 @@
                     platform: "Distribución por Plataforma",
                     roofType: "Tipos de Techos Preferidos",
                     experience: "¿Tienes Experiencia en Construcción o Techos?",
-                    state: "Distribución por Estado", // Ejemplo para añadir más
-                    leadStatus: "Estado de los Leads" // Ejemplo para añadir más
+                    state: "Distribución por Estado",
+                    leadStatus: "Estado de los Leads"
                 },
                 pagination: {
                     previous: "Anterior",
@@ -442,13 +442,6 @@
                     readFileError: "Error reading file.",
                     noData: "No data to display.",
                     emptySheet: "The selected sheet is empty."
-                },
-                chartTitles: {
-                    platform: "Distribution by Platform",
-                    roofType: "Preferred Roof Types",
-                    experience: "Do You Have Construction or Roofing Experience?",
-                    state: "Distribution by State",
-                    leadStatus: "Lead Status"
                 },
                 pagination: {
                     previous: "Previous",
@@ -487,7 +480,7 @@
         let currentPage = 1;
         const rowsPerPage = 15; // Número de filas a mostrar por página
 
-        // --- Funciones de utilidad para Gráficos ---
+        // --- Funciones de Utilidad para Gráficos ---
 
         // Función para contar ocurrencias de valores en una columna específica
         function countOccurrences(data, columnName) {
@@ -523,7 +516,7 @@
             if (window.myCharts && window.myCharts[id]) {
                 window.myCharts[id].destroy();
             }
-            window.myCharts = window.myCharts || {};
+            window.myCharts = window.myCharts || {}; // Inicializa el objeto si no existe
             window.myCharts[id] = new Chart(ctx, {
                 type: 'pie',
                 data: chartData,
@@ -550,7 +543,7 @@
             const chartData = {
                 labels: Object.keys(dataCounts),
                 datasets: [{
-                    label: translate('chartTitles.count'), 
+                    label: translate('chartTitles.count'), // Añadido a traducciones si es necesario
                     data: Object.values(dataCounts),
                     backgroundColor: [
                         '#4CAF50', '#2196F3', '#FFC107', '#F44336', '#9C27B0', '#FF9800', '#00BCD4', '#E91E63', '#607D8B'
@@ -565,7 +558,7 @@
             if (window.myCharts && window.myCharts[id]) {
                 window.myCharts[id].destroy();
             }
-            window.myCharts = window.myCharts || {};
+            window.myCharts = window.myCharts || {}; // Inicializa el objeto si no existe
             window.myCharts[id] = new Chart(ctx, {
                 type: 'bar',
                 data: chartData,
@@ -650,10 +643,8 @@
             }
             
             // Actualizar títulos de gráficos si el idioma cambia y los gráficos existen
-            if (currentLanguage === 'es') {
-                updateChartTitles(['platform', 'roofType', 'experience', 'state', 'leadStatus']);
-            } else { // English
-                updateChartTitles(['platform', 'roofType', 'experience', 'state', 'leadStatus']);
+            if (currentSheetData.length > 0) {
+                 updateChartTitles(['platform', 'roofType', 'experience', 'state', 'leadStatus']);
             }
         }
 
@@ -788,6 +779,7 @@
                 tableContainer.innerHTML = '<div class="no-data">' + translate('message.emptySheet') + '</div>';
                 paginationContainer.style.display = 'none';
                 chartsContainer.style.display = 'none'; // Ocultar gráficos si la hoja está vacía
+                loadingArea.style.display = 'none';
                 return;
             }
 
@@ -797,7 +789,7 @@
         function processAndDisplayData(data) {
             // La primera fila son los encabezados
             // Nota: La traducción de los encabezados de columna no está implementada aquí.
-            // Si necesitas traducir los nombres de las columnas dinámicamente, requeriría un mapeo de encabezados a claves de traducción.
+            // Si necesitas traducir los nombres de las columnas dinámicamente, requeriría un mapeo adicional.
             headers = data[0].map(header => header ? header.toString().trim() : ''); 
             currentSheetData = data.slice(1); // Datos del cuerpo de la tabla
 
@@ -875,7 +867,7 @@
                 const platformChartDiv = document.createElement('div');
                 platformChartDiv.classList.add('chart-wrapper');
                 platformChartDiv.innerHTML = `
-                    <div class="chart-title">${translate('chartTitles.platform')}</div>
+                    <div class="chart-title"></div> <!-- Título se pondrá con translate -->
                     <canvas id="platformChart" class="chart-canvas"></canvas>
                 `;
                 chartsContainer.appendChild(platformChartDiv);
@@ -888,7 +880,7 @@
                 const roofTypeChartDiv = document.createElement('div');
                 roofTypeChartDiv.classList.add('chart-wrapper');
                 roofTypeChartDiv.innerHTML = `
-                    <div class="chart-title">${translate('chartTitles.roofType')}</div>
+                    <div class="chart-title"></div> <!-- Título se pondrá con translate -->
                     <canvas id="roofTypeChart" class="chart-canvas"></canvas>
                 `;
                 chartsContainer.appendChild(roofTypeChartDiv);
@@ -901,7 +893,7 @@
                 const experienceChartDiv = document.createElement('div');
                 experienceChartDiv.classList.add('chart-wrapper');
                 experienceChartDiv.innerHTML = `
-                    <div class="chart-title">${translate('chartTitles.experience')}</div>
+                    <div class="chart-title"></div> <!-- Título se pondrá con translate -->
                     <canvas id="experienceChart" class="chart-canvas"></canvas>
                 `;
                 chartsContainer.appendChild(experienceChartDiv);
@@ -914,7 +906,7 @@
                 const stateChartDiv = document.createElement('div');
                 stateChartDiv.classList.add('chart-wrapper');
                 stateChartDiv.innerHTML = `
-                    <div class="chart-title">${translate('chartTitles.state')}</div>
+                    <div class="chart-title"></div> <!-- Título se pondrá con translate -->
                     <canvas id="stateChart" class="chart-canvas"></canvas>
                 `;
                 chartsContainer.appendChild(stateChartDiv);
@@ -927,7 +919,7 @@
                 const leadStatusChartDiv = document.createElement('div');
                 leadStatusChartDiv.classList.add('chart-wrapper');
                 leadStatusChartDiv.innerHTML = `
-                    <div class="chart-title">${translate('chartTitles.leadStatus')}</div>
+                    <div class="chart-title"></div> <!-- Título se pondrá con translate -->
                     <canvas id="leadStatusChart" class="chart-canvas"></canvas>
                 `;
                 chartsContainer.appendChild(leadStatusChartDiv);
@@ -937,7 +929,7 @@
             // Si no se renderizó ningún gráfico, muestra un mensaje
             if (chartsContainer.children.length === 0) {
                 chartsContainer.style.display = 'block'; // Mostrar contenedor para el mensaje
-                chartsContainer.innerHTML = '<div class="no-data">No hay datos suficientes para generar gráficos.</div>';
+                chartsContainer.innerHTML = '<div class="no-data">' + translate('message.noData') + '</div>';
             }
         }
 
