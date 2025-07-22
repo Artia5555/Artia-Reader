@@ -284,13 +284,13 @@
         *** CONFIGURACIÓN PARA DESPLIEGUE WEB (Vercel/GitHub) ***
         1. ASEGÚRATE de que la siguiente línea de la CDN (la que tiene la URL actualizada) esté DESCOMENTADA.
            Esta es la línea que Vercel necesita para cargar SheetJS.
-        2. ASEGÚRATE de que la línea que apunta a `xlsx.full.min.js` local esté COMENTADA con `<!-- -->`.
+        2. ASEGÚRATE de que la línea que apunta a `xlsx.full.min.js` local esté COMENTADA con.
         3. Sube este archivo HTML a tu repositorio de GitHub. Vercel usará la CDN de SheetJS.
     -->
     <!-- CDN de SheetJS (versión correcta para Vercel/Web) -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/xlsx.full.min.js"></script>
     <!-- Archivo local de SheetJS (comentar esta línea para el despliegue en Vercel) -->
-    <!-- <script src="xlsx.full.min.js"></script> -->
+    <script src="xlsx.full.min.js"></script>
 
     <script>
         const fileInput = document.getElementById('fileInput');
