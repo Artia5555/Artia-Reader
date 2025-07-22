@@ -16,7 +16,7 @@
             --text-color: #333; /* Color de texto principal */
             --text-muted: #7f8c8d; /* Texto secundario/desactivado */
             --error-color: #e74c3c; /* Rojo para errores */
-            --loading-color: #f8f9fa; /* Naranja para carga */
+            --loading-color: #e67e22; /* Naranja para carga */
             --border-color: #dee2e6; /* Color de borde sutil */
             --hover-bg: #e9ecef; /* Color de fondo al pasar el ratón */
             --table-even-bg: #f9fbfd; /* Fondo de fila par suave */
@@ -411,7 +411,8 @@
                     libraryNotLoaded: "La librería SheetJS (XLSX) no está cargada. Verifica la URL de la CDN o la inclusión del archivo JS local.",
                     readFileError: "Error al leer el archivo.",
                     noData: "No hay datos para mostrar.",
-                    emptySheet: "La hoja seleccionada está vacía."
+                    emptySheet: "La hoja seleccionada está vacía.",
+                    noChartData: "No hay datos suficientes para generar gráficos." // Mensaje si no hay gráficos
                 },
                 chartTitles: {
                     platform: "Distribución por Plataforma",
@@ -441,7 +442,8 @@
                     libraryNotLoaded: "SheetJS (XLSX) library is not loaded. Please check the CDN URL or the local JS file inclusion.",
                     readFileError: "Error reading file.",
                     noData: "No data to display.",
-                    emptySheet: "The selected sheet is empty."
+                    emptySheet: "The selected sheet is empty.",
+                    noChartData: "Not enough data to generate charts."
                 },
                 pagination: {
                     previous: "Previous",
@@ -486,7 +488,10 @@
         function countOccurrences(data, columnName) {
             const counts = {};
             const headerIndex = headers.indexOf(columnName);
-            if (headerIndex === -1) return {}; // Columna no encontrada
+            if (headerIndex === -1) {
+                console.warn(`Column "${columnName}" not found in headers.`);
+                return {}; // Columna no encontrada
+            }
 
             data.forEach(row => {
                 const value = row[headerIndex];
@@ -511,7 +516,12 @@
                 }]
             };
 
-            const ctx = document.getElementById(id).getContext('2d');
+            const ctx = document.getElementById(id)?.getContext('2d'); // Usar ?. para evitar error si el canvas no existe
+            if (!ctx) {
+                console.error(`Canvas element with id "${id}" not found.`);
+                return;
+            }
+
             // Destruir gráfico anterior si existe para evitar reutilización de contexto
             if (window.myCharts && window.myCharts[id]) {
                 window.myCharts[id].destroy();
@@ -543,7 +553,7 @@
             const chartData = {
                 labels: Object.keys(dataCounts),
                 datasets: [{
-                    label: translate('chartTitles.count'), // Añadido a traducciones si es necesario
+                    label: translate('chartTitles.count'), // Etiqueta para el dataset
                     data: Object.values(dataCounts),
                     backgroundColor: [
                         '#4CAF50', '#2196F3', '#FFC107', '#F44336', '#9C27B0', '#FF9800', '#00BCD4', '#E91E63', '#607D8B'
@@ -553,7 +563,11 @@
                 }]
             };
 
-            const ctx = document.getElementById(id).getContext('2d');
+            const ctx = document.getElementById(id)?.getContext('2d');
+            if (!ctx) {
+                console.error(`Canvas element with id "${id}" not found.`);
+                return;
+            }
             // Destruir gráfico anterior si existe
             if (window.myCharts && window.myCharts[id]) {
                 window.myCharts[id].destroy();
@@ -625,7 +639,7 @@
                     const parts = messageArea.textContent.split(':');
                     const originalError = parts.length > 1 ? parts[1].trim() : '';
                     updateMessage(`${translate('message.error')} ${originalError || ''}`, 'error');
-                } else if (messageArea.classList.contains('loading')) {
+                } else if (messageArea.classList.க்கூடிய('loading')) {
                     updateMessage(translate('message.processing'), 'loading');
                 } else {
                     updateMessage(translate('message.selectFile'), 'info');
@@ -861,75 +875,49 @@
             chartsContainer.innerHTML = ''; // Limpiar gráficos anteriores
             chartsContainer.style.display = 'flex'; // Mostrar el contenedor de gráficos
 
-            // --- Gráfico 1: Distribución por Platform ---
-            const platformCounts = countOccurrences(data, 'Platform');
-            if (Object.keys(platformCounts).length > 0) {
-                const platformChartDiv = document.createElement('div');
-                platformChartDiv.classList.add('chart-wrapper');
-                platformChartDiv.innerHTML = `
-                    <div class="chart-title"></div> <!-- Título se pondrá con translate -->
-                    <canvas id="platformChart" class="chart-canvas"></canvas>
-                `;
-                chartsContainer.appendChild(platformChartDiv);
-                createPieChart('platformChart', 'platform', platformCounts);
-            }
+            // --- Configuración de Columnas a Graficar ---
+            // Aquí puedes definir qué columnas quieres graficar.
+            // El formato es: 'NombreDeColumnaEnExcel': 'tipoDeGrafico' (pie o bar)
+            // Asegúrate de que los nombres de columna coincidan exactamente con los encabezados de tu Excel.
+            const columnsToChart = {
+                'Platform': 'pie',
+                'If yes, which one are you more comfortable with?': 'pie',
+                'Do you have experience in construction or roofing?': 'bar',
+                'State': 'bar', // Ejemplo para añadir más
+                'Lead status': 'pie' // Ejemplo para añadir más
+            };
 
-            // --- Gráfico 2: Tipos de Techos Preferidos ---
-            const roofTypeCounts = countOccurrences(data, 'If yes, which one are you more comfortable with?');
-            if (Object.keys(roofTypeCounts).length > 0) {
-                const roofTypeChartDiv = document.createElement('div');
-                roofTypeChartDiv.classList.add('chart-wrapper');
-                roofTypeChartDiv.innerHTML = `
-                    <div class="chart-title"></div> <!-- Título se pondrá con translate -->
-                    <canvas id="roofTypeChart" class="chart-canvas"></canvas>
-                `;
-                chartsContainer.appendChild(roofTypeChartDiv);
-                createPieChart('roofTypeChart', 'roofType', roofTypeCounts);
-            }
+            let chartsCreated = 0; // Contador para saber si se generó algún gráfico
 
-            // --- Gráfico 3: Experiencia en Construcción/Techos ---
-            const experienceCounts = countOccurrences(data, 'Do you have experience in construction or roofing?');
-            if (Object.keys(experienceCounts).length > 0) {
-                const experienceChartDiv = document.createElement('div');
-                experienceChartDiv.classList.add('chart-wrapper');
-                experienceChartDiv.innerHTML = `
-                    <div class="chart-title"></div> <!-- Título se pondrá con translate -->
-                    <canvas id="experienceChart" class="chart-canvas"></canvas>
-                `;
-                chartsContainer.appendChild(experienceChartDiv);
-                createBarChart('experienceChart', 'experience', experienceCounts);
-            }
-            
-            // --- Gráfico 4: Distribución por Estado (Ejemplo) ---
-            const stateCounts = countOccurrences(data, 'State');
-            if (Object.keys(stateCounts).length > 0) {
-                const stateChartDiv = document.createElement('div');
-                stateChartDiv.classList.add('chart-wrapper');
-                stateChartDiv.innerHTML = `
-                    <div class="chart-title"></div> <!-- Título se pondrá con translate -->
-                    <canvas id="stateChart" class="chart-canvas"></canvas>
-                `;
-                chartsContainer.appendChild(stateChartDiv);
-                createBarChart('stateChart', 'state', stateCounts);
-            }
+            for (const columnName in columnsToChart) {
+                const chartType = columnsToChart[columnName];
+                const dataCounts = countOccurrences(data, columnName);
 
-            // --- Gráfico 5: Estado de los Leads (Ejemplo) ---
-            const leadStatusCounts = countOccurrences(data, 'Lead status');
-            if (Object.keys(leadStatusCounts).length > 0) {
-                const leadStatusChartDiv = document.createElement('div');
-                leadStatusChartDiv.classList.add('chart-wrapper');
-                leadStatusChartDiv.innerHTML = `
-                    <div class="chart-title"></div> <!-- Título se pondrá con translate -->
-                    <canvas id="leadStatusChart" class="chart-canvas"></canvas>
-                `;
-                chartsContainer.appendChild(leadStatusChartDiv);
-                createPieChart('leadStatusChart', 'leadStatus', leadStatusCounts);
+                if (Object.keys(dataCounts).length > 1) { // Solo graficar si hay al menos 2 categorías diferentes
+                    const chartDiv = document.createElement('div');
+                    chartDiv.classList.add('chart-wrapper');
+                    // Generamos un ID único basado en el nombre de la columna
+                    const chartId = `${columnName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')}Chart`; 
+                    
+                    chartDiv.innerHTML = `
+                        <div class="chart-title"></div> <!-- Título se pondrá con translate -->
+                        <canvas id="${chartId}" class="chart-canvas"></canvas>
+                    `;
+                    chartsContainer.appendChild(chartDiv);
+
+                    if (chartType === 'pie') {
+                        createPieChart(chartId, columnName.toLowerCase().replace(/[^a-z0-9]/g, ''), dataCounts); // Pasar clave de traducción
+                    } else if (chartType === 'bar') {
+                        createBarChart(chartId, columnName.toLowerCase().replace(/[^a-z0-9]/g, ''), dataCounts); // Pasar clave de traducción
+                    }
+                    chartsCreated++;
+                }
             }
 
             // Si no se renderizó ningún gráfico, muestra un mensaje
-            if (chartsContainer.children.length === 0) {
+            if (chartsCreated === 0) {
                 chartsContainer.style.display = 'block'; // Mostrar contenedor para el mensaje
-                chartsContainer.innerHTML = '<div class="no-data">' + translate('message.noData') + '</div>';
+                chartsContainer.innerHTML = '<div class="no-data">' + translate('message.noChartData') + '</div>';
             }
         }
 
